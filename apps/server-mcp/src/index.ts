@@ -65,7 +65,10 @@ const ToolLayer = McpServer.toolkit(AiTools).pipe(
 const McpLive = Layer.mergeAll(ResourceLayer, PromptLayer, ToolLayer);
 
 const ServerConfig = Config.all({
-  port: Config.number("MCP_PORT").pipe(Config.withDefault(9009)),
+  port: Config.number("PORT").pipe(
+    Config.orElse(() => Config.number("MCP_PORT")),
+    Config.withDefault(9009),
+  ),
   enableDevTools: Config.boolean("DEVTOOLS").pipe(Config.withDefault(false)),
 });
 
