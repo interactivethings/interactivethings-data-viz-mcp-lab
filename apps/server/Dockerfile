@@ -5,7 +5,7 @@ WORKDIR /app
 # Step 1: Install dependencies only when needed
 FROM base AS pruner
 WORKDIR /app
-COPY --chown=node:node . .
+COPY --chown=bun:bun . .
 RUN bun add turbo --global
 RUN turbo prune server --docker
 
