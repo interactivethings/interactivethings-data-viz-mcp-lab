@@ -54,7 +54,19 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - uses: "google-github-actions/setup-gcloud@v3"
-      - run: gcloud builds submit --config cloudbuild.yaml --substitutions _REGION=${{ env.GCP_REGION }},_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},_REPOSITORY=${{ env.ARTIFACT_REGISTRY_REPOSITORY }},_IMAGE=${{ env.IMAGE_NAME }}
+      - run: |
+          BUILD_ID=$(gcloud builds submit --async --format="value(id)" --config cloudbuild.yaml --substitutions _REGION=${{ env.GCP_REGION }},_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},_REPOSITORY=${{ env.ARTIFACT_REGISTRY_REPOSITORY }},_IMAGE=${{ env.IMAGE_NAME }})
+          while true; do
+            STATUS=$(gcloud builds describe "$BUILD_ID" --format="value(status)")
+            if [ "$STATUS" = "SUCCESS" ]; then
+              break
+            fi
+            if [ "$STATUS" = "FAILURE" ] || [ "$STATUS" = "INTERNAL_ERROR" ] || [ "$STATUS" = "TIMEOUT" ] || [ "$STATUS" = "CANCELLED" ] || [ "$STATUS" = "EXPIRED" ]; then
+              gcloud builds describe "$BUILD_ID"
+              exit 1
+            fi
+            sleep 5
+          done
 
       - uses: "google-github-actions/deploy-cloudrun@v3"
         with:
