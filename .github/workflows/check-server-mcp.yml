@@ -1,4 +1,4 @@
-name: Check - Server
+name: Check - MCP Server
 
 on:
   workflow_dispatch:
