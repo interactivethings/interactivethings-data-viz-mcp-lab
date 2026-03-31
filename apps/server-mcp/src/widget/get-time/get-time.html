@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Get Time</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        background: transparent;
+        color: inherit;
+      }
+
+      .card {
+        display: grid;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(14, 116, 144, 0.1));
+      }
+
+      h1 {
+        font-size: 16px;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        opacity: 0.7;
+      }
+
+      .time {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(15, 23, 42, 0.6);
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      button:hover {
+        background: rgba(15, 23, 42, 0.75);
+      }
+
+      .status {
+        font-size: 12px;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Get Time</h1>
+      <div class="time" id="time">Awaiting server time...</div>
+      <button id="refresh" type="button">Refresh time</button>
+      <div class="status" id="status">Ready.</div>
+    </div>
+
+    <script>
+      const timeEl = document.getElementById("time");
+      const statusEl = document.getElementById("status");
+      const refreshButton = document.getElementById("refresh");
+
+      const normalizeTime = (value) => {
+        if (typeof value !== "string") return "";
+        try {
+          const parsed = JSON.parse(value);
+          return typeof parsed === "string" ? parsed : value;
+        } catch {
+          return value;
+        }
+      };
+
+      let nextId = 1;
+
+      const sendRequest = (method, params) => {
+        const id = nextId++;
+        window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
+        return new Promise((resolve, reject) => {
+          const listener = (event) => {
+            const payload = event.data?.payload ?? event.data;
+            if (!payload || payload.id !== id) return;
+            window.removeEventListener("message", listener);
+            if (payload.result) return resolve(payload.result);
+            reject(payload.error || new Error("Request failed"));
+          };
+          window.addEventListener("message", listener);
+        });
+      };
+
+      const sendNotification = (method, params) => {
+        window.parent.postMessage({ jsonrpc: "2.0", method, params }, "*");
+      };
+
+      const applyToolResult = (payload) => {
+        const content = payload?.content ?? [];
+        const textItem = content.find((item) => item.type === "text");
+        const time = normalizeTime(textItem?.text);
+        if (time) {
+          timeEl.textContent = time;
+          statusEl.textContent = "Updated from server.";
+        }
+      };
+
+      const refreshTime = async () => {
+        statusEl.textContent = "Requesting time from server...";
+        try {
+          const result = await sendRequest("tools/call", {
+            name: "get_time",
+            arguments: {},
+          });
+          applyToolResult(result);
+        } catch {
+          statusEl.textContent = "Refresh failed.";
+        }
+      };
+
+      refreshButton.addEventListener("click", () => {
+        void refreshTime();
+      });
+
+      window.addEventListener("message", (event) => {
+        const message = event.data?.payload ?? event.data;
+        if (!message || message.method !== "ui/notifications/tool-result") {
+          return;
+        }
+        applyToolResult(message.params);
+      });
+
+      const initialize = async () => {
+        statusEl.textContent = "Connecting...";
+        try {
+          await sendRequest("ui/initialize", {
+            appCapabilities: {},
+            appInfo: { name: "get-time", version: "0.1.0" },
+            protocolVersion: "2026-01-26",
+          });
+          sendNotification("ui/notifications/initialized", {});
+          statusEl.textContent = "Ready.";
+        } catch {
+          statusEl.textContent = "Connect failed.";
+        }
+      };
+
+      void initialize();
+    </script>
+  </body>
+</html>

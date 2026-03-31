@@ -4,7 +4,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun build src/index.ts --outdir=dist --target=bun --minify",
+    "build": "bun build src/index.ts --outdir=dist --target=bun --minify && bun run build:assets",
+    "build:assets": "mkdir -p dist/widget/get-time && cp src/widget/get-time/get-time.html dist/widget/get-time/get-time.html",
     "build:types": "tsc --emitDeclarationOnly",
     "dev": "bun --watch run src/index.ts",
     "inspector": "bun run dev & sleep 2 && npx @mcpjam/inspector@latest; kill %1",
