@@ -118,6 +118,17 @@
       };
 
       const applyToolResult = (payload) => {
+        const structured = payload?.structuredContent ?? payload?.structured ?? null;
+        if (structured?.time) {
+          timeEl.textContent = structured.time;
+          statusEl.textContent = "Updated from server.";
+          return;
+        }
+        if (structured?.message) {
+          statusEl.textContent = structured.message;
+          return;
+        }
+
         const content = payload?.content ?? [];
         const textItem = content.find((item) => item.type === "text");
         const data = normalizePayload(textItem?.text);
