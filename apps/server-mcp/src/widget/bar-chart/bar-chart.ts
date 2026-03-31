@@ -45,7 +45,8 @@ const BarChartWidgetProps = Schema.Struct({
 });
 
 export const BarChartWidgetPayload = Schema.Struct({
-  data: Schema.Array(BarChartDatum),
+  data: Schema.optional(Schema.Array(BarChartDatum)),
+  dataUrl: Schema.optional(Schema.String),
   props: Schema.optional(BarChartWidgetProps),
 });
 
