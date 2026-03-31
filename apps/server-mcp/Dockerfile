@@ -30,6 +30,7 @@ RUN adduser --system --uid 1001 server-mcp
 USER server-mcp
 
 COPY --from=builder /app/apps/server-mcp/dist/index.js ./server-mcp/index.js
+COPY --from=builder /app/apps/server-mcp/dist/widget ./server-mcp/widget
 COPY --from=builder /app/apps/server-mcp/package.json ./server-mcp/package.json
 
 EXPOSE 8000
