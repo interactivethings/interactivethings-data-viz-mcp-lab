@@ -1,0 +1,31 @@
+{
+  "name": "@repo/bar-chart-widget",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --host --clearScreen false",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit -p tsconfig.json",
+    "clean": "git clean -xdf .cache dist node_modules"
+  },
+  "dependencies": {
+    "d3": "^7.9.0",
+    "@observablehq/plot": "^0.6.17",
+    "framer-motion": "^12.23.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@repo/config-typescript": "workspace:*",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.3",
+    "vite-plugin-singlefile": "^2.3.2"
+  }
+}
