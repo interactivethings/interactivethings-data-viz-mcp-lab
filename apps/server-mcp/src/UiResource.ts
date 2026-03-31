@@ -5,6 +5,7 @@ const UiResourceMimeType = "text/html;profile=mcp-app";
 const AppsSdkResourceMimeType = "text/html+skybridge";
 const AppsSdkAdapterScript =
   '<script src="https://unpkg.com/@mcp-ui/adapter-appssdk@1/dist/index.js"></script>';
+const AppsSdkScriptOrigin = "https://unpkg.com";
 
 type UiMeta = {
   prefersBorder?: boolean;
@@ -38,7 +39,17 @@ const buildAppsSdkMeta = <E, R>(spec: UiResourceSpec<E, R>) => {
     result["openai/widgetPrefersBorder"] = spec.meta.prefersBorder;
   }
   if (spec.meta?.csp !== undefined) {
-    result["openai/widgetCSP"] = spec.meta.csp;
+    const resourceDomains = spec.meta.csp.resourceDomains ?? [];
+    result["openai/widgetCSP"] = {
+      ...spec.meta.csp,
+      resourceDomains: resourceDomains.includes(AppsSdkScriptOrigin)
+        ? resourceDomains
+        : [...resourceDomains, AppsSdkScriptOrigin],
+    };
+  } else {
+    result["openai/widgetCSP"] = {
+      resourceDomains: [AppsSdkScriptOrigin],
+    };
   }
   if (spec.meta?.domain !== undefined) {
     result["openai/widgetDomain"] = spec.meta.domain;
