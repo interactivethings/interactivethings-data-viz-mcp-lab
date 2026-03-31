@@ -150,6 +150,10 @@ export const makeUiRenderTool = <
     failure: Schema.Never,
   })
     .annotate(Tool.Title, spec.title)
+    .annotate(Tool.Readonly, true)
+    .annotate(Tool.Destructive, false)
+    .annotate(Tool.OpenWorld, false)
+    .annotate(Tool.Idempotent, true)
     .annotate(Tool.Meta, {
       ui: { resourceUri },
       "openai/outputTemplate": `${resourceUri}/apps-sdk`,
@@ -187,4 +191,9 @@ export const makeUiAppTool = <
     parameters: spec.parameters,
     success: spec.success,
     failure: Schema.Never,
-  }).annotate(Tool.Meta, { ui: { visibility: ["app"] } });
+  })
+    .annotate(Tool.Readonly, true)
+    .annotate(Tool.Destructive, false)
+    .annotate(Tool.OpenWorld, false)
+    .annotate(Tool.Idempotent, true)
+    .annotate(Tool.Meta, { ui: { visibility: ["app"] } });

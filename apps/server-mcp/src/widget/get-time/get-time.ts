@@ -33,7 +33,9 @@ export const RenderGetTimeTool = makeUiRenderTool(GetTimeUiResourceUri, {
   title: "Get Time",
   description: "Render the get time UI",
   parameters: Tool.EmptyParams,
-  success: Schema.String,
+  success: Schema.Struct({
+    message: Schema.String,
+  }),
   openai: {
     toolInvocation: {
       invoking: "Loading time widget...",
@@ -43,13 +45,21 @@ export const RenderGetTimeTool = makeUiRenderTool(GetTimeUiResourceUri, {
 });
 
 export const renderGetTimeHandler = () =>
-  Effect.succeed("Get time ready. Use the UI to refresh.");
+  Effect.succeed({ message: "Get time ready. Use the UI to refresh." });
 
 export const GetTimeTool = Tool.make("get_time", {
   description: "Returns the current server time",
   parameters: Tool.EmptyParams,
-  success: Schema.String,
+  success: Schema.Struct({
+    time: Schema.String,
+  }),
   failure: Schema.Never,
-}).annotate(Tool.Title, "Get Time");
+})
+  .annotate(Tool.Title, "Get Time")
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.OpenWorld, false)
+  .annotate(Tool.Idempotent, true);
 
-export const getTimeHandler = () => Effect.sync(() => new Date().toISOString());
+export const getTimeHandler = () =>
+  Effect.sync(() => ({ time: new Date().toISOString() }));

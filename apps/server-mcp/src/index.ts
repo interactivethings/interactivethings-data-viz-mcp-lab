@@ -53,7 +53,11 @@ class AiTools extends Toolkit.make(
         description: "The search term to use to find dad jokes",
       }),
     }),
-  }),
+  })
+    .annotate(Tool.Readonly, true)
+    .annotate(Tool.Destructive, false)
+    .annotate(Tool.OpenWorld, false)
+    .annotate(Tool.Idempotent, true),
   RenderGetTimeTool,
   GetTimeTool,
   // You can add more tools here
