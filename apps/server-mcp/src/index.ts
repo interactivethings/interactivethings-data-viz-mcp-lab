@@ -5,6 +5,11 @@ import { McpServer, Tool, Toolkit } from "effect/unstable/ai";
 import { DevTools } from "effect/unstable/devtools";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import {
+  BarChartWidgetResourceLayer,
+  RenderBarChartWidgetTool,
+  renderBarChartWidgetHandler,
+} from "./widget/bar-chart/bar-chart";
+import {
   GetTimeResourceLayer,
   GetTimeTool,
   getTimeHandler,
@@ -23,6 +28,7 @@ const ResourceLayer = Layer.mergeAll(
     ),
   }),
   GetTimeResourceLayer,
+  BarChartWidgetResourceLayer,
   // You can add more resources here
 );
 
@@ -60,6 +66,7 @@ class AiTools extends Toolkit.make(
     .annotate(Tool.Idempotent, true),
   RenderGetTimeTool,
   GetTimeTool,
+  RenderBarChartWidgetTool,
   // You can add more tools here
 ) {}
 
@@ -72,6 +79,8 @@ const ToolLayer = McpServer.toolkit(AiTools).pipe(
         ),
       render_get_time: () => renderGetTimeHandler(),
       get_time: () => getTimeHandler(),
+      render_bar_chart_widget: (payload) =>
+        renderBarChartWidgetHandler(payload),
       // add implementation for more tools here
     }),
   ),
