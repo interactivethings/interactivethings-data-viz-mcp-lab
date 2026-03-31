@@ -17,8 +17,7 @@ type BarChartWidgetProps = {
 };
 
 type BarChartWidgetPayload = {
-  data?: BarChartDatum[];
-  dataUrl?: string;
+  data: BarChartDatum[];
   props?: BarChartWidgetProps;
 };
 
@@ -49,12 +48,12 @@ const parsePayload = (value: unknown): BarChartWidgetPayload | null => {
 
   const record = value as Record<string, unknown>;
   const dataValue = record["data"];
-  const data = Array.isArray(dataValue)
-    ? dataValue.filter(isBarChartDatum)
-    : null;
-  const dataUrl =
-    typeof record["dataUrl"] === "string" ? record["dataUrl"] : null;
-  if (!dataUrl && (!data || data.length === 0)) {
+  if (!Array.isArray(dataValue)) {
+    return null;
+  }
+
+  const data = dataValue.filter(isBarChartDatum);
+  if (data.length === 0) {
     return null;
   }
 
@@ -64,15 +63,7 @@ const parsePayload = (value: unknown): BarChartWidgetPayload | null => {
       ? (propsValue as BarChartWidgetProps)
       : undefined;
 
-  if (data && data.length > 0) {
-    return props ? { data, props } : { data };
-  }
-
-  if (dataUrl) {
-    return props ? { dataUrl, props } : { dataUrl };
-  }
-
-  return null;
+  return props ? { data, props } : { data };
 };
 
 type ToolResultMessage = {
@@ -298,73 +289,11 @@ export const WidgetApp = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!payload) {
-      setResolved(null);
-      setLoadError(null);
-      return undefined;
-    }
-
-    if (payload.data) {
-      setResolved(payload);
-      setLoadError(null);
-      return undefined;
-    }
-
-    if (!payload.dataUrl) {
-      setResolved(null);
-      setLoadError("Missing data or dataUrl");
-      return undefined;
-    }
-
-    const controller = new AbortController();
-    const load = async () => {
-      try {
-        setLoadError(null);
-        setResolved(null);
-        const response = await fetch(payload.dataUrl as string, {
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error(`Request failed with ${response.status}`);
-        }
-        const json = await response.json();
-        const nextData = Array.isArray(json)
-          ? json
-          : Array.isArray(json?.data)
-            ? json.data
-            : [];
-        const data = nextData.filter(isBarChartDatum);
-        if (data.length === 0) {
-          throw new Error("No valid data points");
-        }
-        setResolved(payload.props ? { data, props: payload.props } : { data });
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setLoadError(
-            error instanceof Error ? error.message : "Failed to load data",
-          );
-        }
-      }
-    };
-
-    void load();
-    return () => controller.abort();
-  }, [payload]);
-
   if (!payload) {
     return <div style={{ padding: 16 }}>Waiting for data…</div>;
   }
 
-  if (loadError) {
-    return <div style={{ padding: 16 }}>Failed to load data: {loadError}</div>;
-  }
-
-  if (!resolved?.data) {
-    return <div style={{ padding: 16 }}>Loading data…</div>;
-  }
-
-  const { data, props = {} } = resolved;
+  const { data, props = {} } = payload;
 
   return <BarChart data={data} {...props} />;
 };
