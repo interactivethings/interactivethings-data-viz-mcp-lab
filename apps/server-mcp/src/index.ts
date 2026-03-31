@@ -4,6 +4,13 @@ import { Config, Effect, Layer, Schema } from "effect";
 import { McpServer, Tool, Toolkit } from "effect/unstable/ai";
 import { DevTools } from "effect/unstable/devtools";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
+import {
+  GetTimeResourceLayer,
+  GetTimeTool,
+  getTimeHandler,
+  RenderGetTimeTool,
+  renderGetTimeHandler,
+} from "./widget/get-time/get-time";
 
 // Define Resources
 const ResourceLayer = Layer.mergeAll(
@@ -15,6 +22,7 @@ const ResourceLayer = Layer.mergeAll(
       "This is a sample primer document to demonstrate MCP server capabilities.",
     ),
   }),
+  GetTimeResourceLayer,
   // You can add more resources here
 );
 
@@ -46,6 +54,8 @@ class AiTools extends Toolkit.make(
       }),
     }),
   }),
+  RenderGetTimeTool,
+  GetTimeTool,
   // You can add more tools here
 ) {}
 
@@ -56,6 +66,8 @@ const ToolLayer = McpServer.toolkit(AiTools).pipe(
         Effect.succeed(
           `Here's a dad joke about ${params.searchTerm}: Why don't ${params.searchTerm}s ever get lost? Because they always follow the map!`,
         ),
+      render_get_time: () => renderGetTimeHandler(),
+      get_time: () => getTimeHandler(),
       // add implementation for more tools here
     }),
   ),
