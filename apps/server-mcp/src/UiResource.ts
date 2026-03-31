@@ -156,6 +156,7 @@ export const makeUiRenderTool = <
     .annotate(Tool.Idempotent, true)
     .annotate(Tool.Meta, {
       ui: { resourceUri },
+      "ui/resourceUri": resourceUri,
       "openai/outputTemplate": `${resourceUri}/apps-sdk`,
       ...(spec.openai?.widgetAccessible !== undefined
         ? { "openai/widgetAccessible": spec.openai.widgetAccessible }
