@@ -7,6 +7,9 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**"]
     },
+    "server-mcp#build": {
+      "dependsOn": ["@repo/bar-chart-widget#build"]
+    },
     "dev": {
       "persistent": true,
       "cache": false
