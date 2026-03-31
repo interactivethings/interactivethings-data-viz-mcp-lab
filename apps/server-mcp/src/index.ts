@@ -103,7 +103,13 @@ const McpRouter = McpServer.layerHttp({
     HttpRouter.cors({
       allowedOrigins: ["*"],
       allowedMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "mcp-protocol-version"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "mcp-protocol-version",
+        "mcp-session-id",
+      ],
+      exposedHeaders: ["mcp-session-id", "mcp-protocol-version"],
       credentials: false,
     }),
   ),
