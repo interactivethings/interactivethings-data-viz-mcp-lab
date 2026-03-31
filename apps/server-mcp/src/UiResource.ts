@@ -3,9 +3,36 @@ import { McpServer, Tool } from "effect/unstable/ai";
 
 const UiResourceMimeType = "text/html;profile=mcp-app";
 const AppsSdkResourceMimeType = "text/html+skybridge";
-const AppsSdkAdapterScript =
-  '<script src="https://unpkg.com/@mcp-ui/adapter-appssdk@1/dist/index.js"></script>';
-const AppsSdkScriptOrigin = "https://unpkg.com";
+const AppsSdkAdapterScript = `
+<script>
+(function() {
+  function installAdapter() {
+    if (!window.openai) return false;
+    var originalPostMessage = window.parent.postMessage.bind(window.parent);
+    window.parent.postMessage = function(message, targetOrigin, transfer) {
+      try {
+        if (message && message.jsonrpc === "2.0" && message.method === "tools/call") {
+          var params = message.params || {};
+          var name = params.name;
+          var args = params.arguments || {};
+          return window.openai.callTool(name, args);
+        }
+      } catch (_error) {
+        // fall through to original postMessage
+      }
+      return originalPostMessage(message, targetOrigin, transfer);
+    };
+    return true;
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", installAdapter);
+  } else {
+    installAdapter();
+  }
+})();
+</script>
+`.trim();
 
 type UiMeta = {
   prefersBorder?: boolean;
@@ -39,17 +66,7 @@ const buildAppsSdkMeta = <E, R>(spec: UiResourceSpec<E, R>) => {
     result["openai/widgetPrefersBorder"] = spec.meta.prefersBorder;
   }
   if (spec.meta?.csp !== undefined) {
-    const resourceDomains = spec.meta.csp.resourceDomains ?? [];
-    result["openai/widgetCSP"] = {
-      ...spec.meta.csp,
-      resourceDomains: resourceDomains.includes(AppsSdkScriptOrigin)
-        ? resourceDomains
-        : [...resourceDomains, AppsSdkScriptOrigin],
-    };
-  } else {
-    result["openai/widgetCSP"] = {
-      resourceDomains: [AppsSdkScriptOrigin],
-    };
+    result["openai/widgetCSP"] = spec.meta.csp;
   }
   if (spec.meta?.domain !== undefined) {
     result["openai/widgetDomain"] = spec.meta.domain;

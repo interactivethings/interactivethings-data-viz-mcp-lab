@@ -90,6 +90,8 @@
 
       let nextId = 1;
 
+      const isAppsSdk = typeof window.openai !== "undefined";
+
       const sendRequest = (method, params) => {
         const id = nextId++;
         if (window.openai?.callTool && method === "tools/call") {
@@ -147,7 +149,18 @@
         applyToolResult(message.params);
       });
 
+      const updateFromOpenAiGlobals = (globals) => {
+        if (!globals) return;
+        applyToolResult(globals.toolOutput);
+      };
+
       const initialize = async () => {
+        if (isAppsSdk) {
+          statusEl.textContent = "Ready.";
+          updateFromOpenAiGlobals(window.openai?.toolOutput);
+          return;
+        }
+
         statusEl.textContent = "Connecting...";
         try {
           await sendRequest("ui/initialize", {
@@ -161,6 +174,11 @@
           statusEl.textContent = "Connect failed.";
         }
       };
+
+      window.addEventListener("openai:set_globals", (event) => {
+        const globals = event.detail?.globals ?? event.detail ?? event.globals;
+        updateFromOpenAiGlobals(globals);
+      });
 
       void initialize();
     </script>
