@@ -78,14 +78,17 @@
       const statusEl = document.getElementById("status");
       const refreshButton = document.getElementById("refresh");
 
-      const normalizeTime = (value) => {
-        if (typeof value !== "string") return "";
-        try {
-          const parsed = JSON.parse(value);
-          return typeof parsed === "string" ? parsed : value;
-        } catch {
-          return value;
+      const normalizePayload = (value) => {
+        if (!value) return {};
+        if (typeof value === "string") {
+          try {
+            return JSON.parse(value);
+          } catch {
+            return {};
+          }
         }
+        if (typeof value === "object") return value;
+        return {};
       };
 
       let nextId = 1;
@@ -117,10 +120,14 @@
       const applyToolResult = (payload) => {
         const content = payload?.content ?? [];
         const textItem = content.find((item) => item.type === "text");
-        const time = normalizeTime(textItem?.text);
-        if (time) {
-          timeEl.textContent = time;
+        const data = normalizePayload(textItem?.text);
+        if (data?.time) {
+          timeEl.textContent = data.time;
           statusEl.textContent = "Updated from server.";
+          return;
+        }
+        if (data?.message) {
+          statusEl.textContent = data.message;
         }
       };
 
