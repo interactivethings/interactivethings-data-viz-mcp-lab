@@ -1,3 +1,4 @@
+import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import * as Plot from "@observablehq/plot";
 import { useEffect, useRef, useState } from "react";
 
@@ -66,38 +67,22 @@ const parsePayload = (value: unknown): BarChartWidgetPayload | null => {
   return props ? { data, props } : { data };
 };
 
-type ToolResultMessage = {
-  method?: string;
-  params?: {
-    isError?: boolean;
-    structuredContent?: unknown;
-    content?: Array<{ type: string; text?: string }>;
-  };
-};
-
-type HostContextMessage = {
-  method?: string;
-  params?: Record<string, unknown>;
-};
-
-const extractPayloadFromMessage = (message: ToolResultMessage) => {
-  if (message.method !== "ui/notifications/tool-result") {
+const extractPayloadFromToolResult = (
+  params: Parameters<
+    NonNullable<NonNullable<ReturnType<typeof useApp>["app"]>["ontoolresult"]>
+  >[0],
+) => {
+  if (params.isError) {
     return null;
   }
 
-  if (message.params?.isError) {
-    return null;
-  }
-
-  const structured = message.params?.structuredContent;
+  const structured = params.structuredContent;
   const structuredPayload = parsePayload(structured);
   if (structuredPayload) {
     return structuredPayload;
   }
 
-  const text = message.params?.content?.find(
-    (item) => item.type === "text",
-  )?.text;
+  const text = params.content?.find((item) => item.type === "text")?.text;
   if (text) {
     try {
       return parsePayload(JSON.parse(text));
@@ -107,45 +92,6 @@ const extractPayloadFromMessage = (message: ToolResultMessage) => {
   }
 
   return null;
-};
-
-const sendRequest = (method: string, params: Record<string, unknown>) => {
-  const id = crypto.randomUUID();
-  window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
-  return new Promise<Record<string, unknown> | null>((resolve) => {
-    const listener = (event: MessageEvent) => {
-      const payload = event.data?.payload ?? event.data;
-      if (!payload || payload.id !== id) {
-        return;
-      }
-      window.removeEventListener("message", listener);
-      resolve(payload.result ?? null);
-    };
-    window.addEventListener("message", listener);
-  });
-};
-
-const applyThemeFromContext = (context: Record<string, unknown>) => {
-  const theme = context["theme"];
-  if (theme === "light" || theme === "dark") {
-    document.documentElement.setAttribute("data-theme", theme);
-    document.documentElement.style.colorScheme = theme;
-  }
-
-  const styles = context["styles"];
-  if (styles && typeof styles === "object") {
-    const stylesRecord = styles as Record<string, unknown>;
-    const variables = stylesRecord["variables"];
-    if (variables && typeof variables === "object") {
-      for (const [key, value] of Object.entries(
-        variables as Record<string, unknown>,
-      )) {
-        if (value !== undefined) {
-          document.documentElement.style.setProperty(key, String(value));
-        }
-      }
-    }
-  }
 };
 
 type BarChartProps = BarChartWidgetProps & {
@@ -252,42 +198,34 @@ const BarChart = ({
 
 export const WidgetApp = () => {
   const [payload, setPayload] = useState<BarChartWidgetPayload | null>(null);
-  const [resolved, setResolved] = useState<BarChartWidgetPayload | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const { app, isConnected, error } = useApp({
+    appInfo: { name: "bar-chart-widget", version: "0.1.0" },
+    capabilities: {},
+    onAppCreated: (app) => {
+      app.ontoolinput = (params) => {
+        const parsed = parsePayload(params.arguments);
+        if (parsed) {
+          setPayload(parsed);
+        }
+      };
+      app.ontoolresult = (params) => {
+        const parsed = extractPayloadFromToolResult(params);
+        if (parsed) {
+          setPayload(parsed);
+        }
+      };
+    },
+  });
 
-  useEffect(() => {
-    const handleMessage = (
-      event: MessageEvent<ToolResultMessage | HostContextMessage>,
-    ) => {
-      const message = event.data ?? {};
-      if (message.method === "ui/notifications/host-context-changed") {
-        const context = (message.params ?? {}) as Record<string, unknown>;
-        applyThemeFromContext(context);
-        return;
-      }
+  useHostStyles(app, app?.getHostContext());
 
-      const parsed = extractPayloadFromMessage(message);
-      if (parsed) {
-        setPayload(parsed);
-      }
-    };
+  if (error) {
+    return <div style={{ padding: 16 }}>Error: {error.message}</div>;
+  }
 
-    window.addEventListener("message", handleMessage);
-    sendRequest("ui/initialize", {
-      appCapabilities: {},
-      appInfo: { name: "bar-chart-widget", version: "0.1.0" },
-      protocolVersion: "2026-01-26",
-    }).then((result) => {
-      const hostContext = result?.["hostContext"];
-      if (hostContext && typeof hostContext === "object") {
-        applyThemeFromContext(hostContext as Record<string, unknown>);
-      }
-    });
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, []);
+  if (!isConnected) {
+    return <div style={{ padding: 16 }}>Connecting…</div>;
+  }
 
   if (!payload) {
     return <div style={{ padding: 16 }}>Waiting for data…</div>;
