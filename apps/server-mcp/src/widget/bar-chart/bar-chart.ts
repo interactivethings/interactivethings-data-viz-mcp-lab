@@ -10,8 +10,8 @@ const BarChartWidgetHtml = Effect.gen(function* () {
   const sourceSuffix = path.join("widget", "bar-chart");
   const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
   const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "bar-chart-widget.html")
-    : path.join(import.meta.dir, "widget/bar-chart/bar-chart-widget.html");
+    ? path.join(import.meta.dir, "widget-bar-chart.html")
+    : path.join(import.meta.dir, "widget/bar-chart/widget-bar-chart.html");
   return yield* fs.readFileString(htmlPath);
 });
 

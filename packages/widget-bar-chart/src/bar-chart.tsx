@@ -118,7 +118,7 @@ export const WidgetApp = () => {
     typeof BarChartWidgetPayload.Type | null
   >(null);
   const { app, isConnected, error } = useApp({
-    appInfo: { name: "bar-chart-widget", version: "0.1.0" },
+    appInfo: { name: "widget-bar-chart", version: "0.1.0" },
     capabilities: {},
     onAppCreated: (app) => {
       app.ontoolinput = (params) => {
