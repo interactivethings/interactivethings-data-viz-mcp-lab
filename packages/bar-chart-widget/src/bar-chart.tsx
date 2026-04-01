@@ -1,71 +1,13 @@
 import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import * as Plot from "@observablehq/plot";
+import {
+  BarChartWidgetPayload,
+  BarDatum,
+  BarMarkProps,
+  PlotLayoutProps,
+} from "@repo/domain/Chart";
+import { Option, Schema } from "effect";
 import { useEffect, useRef, useState } from "react";
-
-type BarChartDatum = {
-  category: string;
-  value: number;
-};
-
-type BarChartWidgetProps = {
-  title?: string;
-  valueLabel?: string;
-  maxWidth?: number;
-  width?: number;
-  height?: number;
-  showLabels?: boolean;
-  maxY?: number;
-};
-
-type BarChartWidgetPayload = {
-  data: BarChartDatum[];
-  props?: BarChartWidgetProps;
-};
-
-const defaultProps: Required<
-  Pick<BarChartWidgetProps, "width" | "height" | "showLabels">
-> = {
-  width: 420,
-  height: 260,
-  showLabels: true,
-};
-
-const isBarChartDatum = (value: unknown): value is BarChartDatum => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const record = value as Record<string, unknown>;
-  return (
-    typeof record["category"] === "string" &&
-    typeof record["value"] === "number"
-  );
-};
-
-const parsePayload = (value: unknown): BarChartWidgetPayload | null => {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  const dataValue = record["data"];
-  if (!Array.isArray(dataValue)) {
-    return null;
-  }
-
-  const data = dataValue.filter(isBarChartDatum);
-  if (data.length === 0) {
-    return null;
-  }
-
-  const propsValue = record["props"];
-  const props =
-    propsValue && typeof propsValue === "object"
-      ? (propsValue as BarChartWidgetProps)
-      : undefined;
-
-  return props ? { data, props } : { data };
-};
 
 const extractPayloadFromToolResult = (
   params: Parameters<
@@ -77,15 +19,19 @@ const extractPayloadFromToolResult = (
   }
 
   const structured = params.structuredContent;
-  const structuredPayload = parsePayload(structured);
-  if (structuredPayload) {
-    return structuredPayload;
+  const structuredPayload = Schema.decodeUnknownOption(BarChartWidgetPayload)(
+    structured,
+  );
+  if (Option.isSome(structuredPayload)) {
+    return structuredPayload.value;
   }
 
   const text = params.content?.find((item) => item.type === "text")?.text;
   if (text) {
     try {
-      return parsePayload(JSON.parse(text));
+      return Option.getOrNull(
+        Schema.decodeUnknownOption(BarChartWidgetPayload)(JSON.parse(text)),
+      );
     } catch {
       return null;
     }
@@ -94,20 +40,12 @@ const extractPayloadFromToolResult = (
   return null;
 };
 
-type BarChartProps = BarChartWidgetProps & {
-  data: BarChartDatum[];
-};
-
 const BarChart = ({
   data,
-  title,
-  valueLabel,
-  maxWidth,
-  width,
-  height = defaultProps.height,
-  showLabels = defaultProps.showLabels,
-  maxY,
-}: BarChartProps) => {
+  direction,
+  layout,
+  marks,
+}: typeof BarChartWidgetPayload.Type) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
@@ -117,46 +55,41 @@ const BarChart = ({
       return undefined;
     }
 
-    const yOptions: Plot.ScaleOptions = { grid: true };
-    if (valueLabel !== undefined) {
-      yOptions.label = valueLabel;
+    const { width: layoutWidth, ...layoutOptions } = layout ?? {};
+    const plotWidth = layoutWidth ?? measuredWidth ?? undefined;
+    const hasXExtent = marks?.x1 !== undefined || marks?.x2 !== undefined;
+    const hasYExtent = marks?.y1 !== undefined || marks?.y2 !== undefined;
+    const isHorizontal = direction === "horizontal";
+    const barOptions = (marks ?? {}) as Plot.BarXOptions | Plot.BarYOptions;
+    const defaultX =
+      marks?.x ??
+      (hasXExtent ? undefined : isHorizontal ? "value" : "category");
+    const defaultY =
+      marks?.y ??
+      (hasYExtent ? undefined : isHorizontal ? "category" : "value");
+    if (defaultX !== undefined) {
+      barOptions.x = defaultX;
     }
-    if (maxY !== undefined) {
-      yOptions.domain = [0, maxY];
+    if (defaultY !== undefined) {
+      barOptions.y = defaultY;
     }
-
-    const plotWidth = width ?? measuredWidth ?? defaultProps.width;
-    const plot = Plot.plot({
+    const barMark = isHorizontal
+      ? Plot.barX(data, barOptions as Plot.BarXOptions)
+      : Plot.barY(data, barOptions as Plot.BarYOptions);
+    const ruleMark = isHorizontal ? Plot.ruleX([0]) : Plot.ruleY([0]);
+    const plotOptions: Plot.PlotOptions = {
       style: "--plot-background: var(--color-background-primary);",
-      width: plotWidth,
-      height,
-      marginLeft: 48,
-      marginBottom: 40,
-      y: yOptions,
-      marks: [
-        Plot.ruleY([0]),
-        Plot.barY(data, {
-          x: "category",
-          y: "value",
-          fill: "#38bdf8",
-          tip: "xy",
-        }),
-        showLabels
-          ? Plot.text(data, {
-              x: "category",
-              y: "value",
-              text: (d: BarChartDatum) => d.value,
-              dy: -6,
-              fill: "currentColor",
-              fontSize: 12,
-            })
-          : null,
-      ].filter(Boolean),
-    });
+      ...layoutOptions,
+      marks: [ruleMark, barMark].filter(Boolean),
+    };
+    if (plotWidth !== undefined) {
+      plotOptions.width = plotWidth;
+    }
+    const plot = Plot.plot(plotOptions);
 
     containerRef.current.replaceChildren(plot);
     return () => plot.remove();
-  }, [data, height, maxY, measuredWidth, showLabels, valueLabel, width]);
+  }, [data, layout, marks, measuredWidth, direction]);
 
   useEffect(() => {
     if (!wrapperRef.current) {
@@ -183,32 +116,38 @@ const BarChart = ({
     <div
       ref={wrapperRef}
       style={{
-        maxWidth,
         width: "100%",
         color: "var(--color-text-primary, #111)",
         backgroundColor: "var(--color-background-secondary, #fff)",
         fontFamily: "var(--font-sans, system-ui, sans-serif)",
       }}
     >
-      {title ? <h2 style={{ margin: "0 0 12px" }}>{title}</h2> : null}
       <div ref={containerRef} />
     </div>
   );
 };
 
 export const WidgetApp = () => {
-  const [payload, setPayload] = useState<BarChartWidgetPayload | null>(null);
+  const [payload, setPayload] = useState<
+    typeof BarChartWidgetPayload.Type | null
+  >(null);
   const { app, isConnected, error } = useApp({
     appInfo: { name: "bar-chart-widget", version: "0.1.0" },
     capabilities: {},
     onAppCreated: (app) => {
       app.ontoolinput = (params) => {
-        const parsed = parsePayload(params.arguments);
+        console.log(
+          Schema.decodeUnknownOption(BarChartWidgetPayload)(params.arguments),
+        );
+        const parsed = Option.getOrNull(
+          Schema.decodeUnknownOption(BarChartWidgetPayload)(params.arguments),
+        );
         if (parsed) {
           setPayload(parsed);
         }
       };
       app.ontoolresult = (params) => {
+        console.log(Schema.decodeUnknownOption(BarChartWidgetPayload)(params));
         const parsed = extractPayloadFromToolResult(params);
         if (parsed) {
           setPayload(parsed);
@@ -231,7 +170,5 @@ export const WidgetApp = () => {
     return <div style={{ padding: 16 }}>Waiting for data…</div>;
   }
 
-  const { data, props = {} } = payload;
-
-  return <BarChart data={data} {...props} />;
+  return <BarChart {...payload} />;
 };
