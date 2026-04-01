@@ -24,9 +24,7 @@ const extractPayloadFromToolResult = (
   const text = params.content?.find((item) => item.type === "text")?.text;
   if (text) {
     try {
-      return Option.getOrNull(
-        Schema.decodeUnknownOption(BarChartWidgetPayload)(JSON.parse(text)),
-      );
+      return Schema.decodeUnknownSync(BarChartWidgetPayload)(JSON.parse(text));
     } catch {
       return null;
     }
@@ -50,35 +48,30 @@ const BarChart = ({
       return undefined;
     }
 
-    const { width: layoutWidth, ...layoutOptions } = layout ?? {};
-    const plotWidth = layoutWidth ?? measuredWidth ?? undefined;
+    const { width: layoutWidth, ...layoutOptions } = layout;
+    const width = layoutWidth ?? measuredWidth ?? undefined;
     const isHorizontal = direction === "horizontal";
-    const barOptions = (marks ?? {}) as Plot.BarXOptions | Plot.BarYOptions;
-    const defaultX = marks?.x ?? (isHorizontal ? "value" : "category");
-    const defaultY = marks?.y ?? (isHorizontal ? "category" : "value");
-    if (defaultX !== undefined) {
-      barOptions.x = defaultX;
-    }
-    if (defaultY !== undefined) {
-      barOptions.y = defaultY;
-    }
-    const barMark = isHorizontal
-      ? Plot.barX(data, barOptions)
-      : Plot.barY(data, barOptions);
-    const ruleMark = isHorizontal ? Plot.ruleX([0]) : Plot.ruleY([0]);
-    const plotOptions: Plot.PlotOptions = {
+    const barOptions = {
+      ...marks,
+      x: marks?.x ?? (isHorizontal ? "value" : "category"),
+      y: marks?.y ?? (isHorizontal ? "category" : "value"),
+    };
+
+    const plot = Plot.plot({
       style: "--plot-background: var(--color-background-primary);",
       ...layoutOptions,
+      ...(width ? { width } : {}),
       color: {
         ...(layoutOptions.color ? layoutOptions.color : {}),
         scheme: "Category10",
       },
-      marks: [ruleMark, barMark].filter(Boolean),
-    };
-    if (plotWidth !== undefined) {
-      plotOptions.width = plotWidth;
-    }
-    const plot = Plot.plot(plotOptions);
+      marks: [
+        isHorizontal ? Plot.ruleX([0]) : Plot.ruleY([0]),
+        isHorizontal
+          ? Plot.barX(data, barOptions)
+          : Plot.barY(data, barOptions),
+      ].filter(Boolean),
+    });
 
     containerRef.current.replaceChildren(plot);
     return () => plot.remove();
@@ -129,8 +122,8 @@ export const WidgetApp = () => {
     capabilities: {},
     onAppCreated: (app) => {
       app.ontoolinput = (params) => {
-        const parsed = Option.getOrNull(
-          Schema.decodeUnknownOption(BarChartWidgetPayload)(params.arguments),
+        const parsed = Schema.decodeUnknownSync(BarChartWidgetPayload)(
+          params.arguments,
         );
         if (parsed) {
           setPayload(parsed);
