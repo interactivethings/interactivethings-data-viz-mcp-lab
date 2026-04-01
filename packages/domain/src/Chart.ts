@@ -61,23 +61,41 @@ export const PlotLayoutProps = Schema.Struct({
 }).mapFields(Struct.map(Schema.optionalKey));
 
 export const BarMarkProps = Schema.Struct({
-  x: Channel,
-  x1: Channel,
-  x2: Channel,
-  y: Channel,
-  y1: Channel,
-  y2: Channel,
-  z: Channel,
+  x: Channel.annotate({
+    description:
+      "Primary position channel. For vertical bars, maps to the category/ordinal axis; for horizontal bars, maps to the value axis.",
+  }),
+  // x1: Channel,
+  // x2: Channel,
+  y: Channel.annotate({
+    description:
+      "Primary value channel. For vertical bars, maps to the value axis; for horizontal bars, maps to the category/ordinal axis.",
+  }),
+  // y1: Channel,
+  // y2: Channel,
+  z: Channel.annotate({
+    description:
+      "Series/channel for grouping within each stack. Use with fill for stacked bars when multiple series share the same x/y.",
+  }),
   interval: IntervalValue,
 
   inset: NumberGreaterThanZero,
 
-  fill: Channel,
-  fillOpacity: Channel,
-  stroke: Channel,
-  strokeWidth: Channel,
-  strokeOpacity: Channel,
-  opacity: Channel,
+  fill: Channel.annotate({
+    description:
+      "Series/color channel. With only x and y available, setting fill (or z) makes Plot apply the stack transform, producing stacked bars. Vertical bars stack by x; horizontal bars stack by y.",
+  }),
+  // fillOpacity: Channel,
+  stroke: Channel.annotate({
+    description: "Stroke color channel. Maps to the outline color of the bars.",
+  }),
+  // strokeWidth: Channel,
+  // strokeOpacity: Channel,
+  // opacity: Channel,
+
+  tip: Schema.Boolean.annotate({
+    description: "If true, show a tooltip with all data fields on hover.",
+  }),
 }).mapFields(Struct.map(Schema.optionalKey));
 
 export const AxisMarkProps = Schema.Struct({
@@ -93,7 +111,7 @@ export const AxisMarkProps = Schema.Struct({
   tickRotate: Schema.Number,
   label: Schema.Union([Schema.String, Schema.Null]),
   labelAnchor: Schema.Literals(["top", "right", "bottom", "left", "center"]),
-  labelOffset: Schema.Number,
+  // labelOffset: Schema.Number,
 }).mapFields(Struct.map(Schema.optionalKey));
 
 export const BarChartWidgetPayload = Schema.Struct({

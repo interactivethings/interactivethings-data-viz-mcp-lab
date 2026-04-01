@@ -4,8 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite --host --clearScreen false",
+    "build": "vite build && bun run build:asset",
+    "build:asset": "bun scripts/copy-asset.ts build",
+    "dev": "bun run dev:asset & vite build --watch",
+    "dev:asset": "bun scripts/copy-asset.ts dev --watch",
+    "dev:local": "vite --host --clearScreen false",
     "preview": "vite preview",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "clean": "git clean -xdf .cache dist node_modules"
