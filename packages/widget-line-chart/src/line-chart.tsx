@@ -33,14 +33,21 @@ const extractPayloadFromToolResult = (
   return null;
 };
 
+type SizeChangedSender = {
+  sendSizeChanged: (params: { width?: number; height?: number }) => unknown;
+};
+
 const LineChart = ({
   data,
   layout,
   marks,
-}: typeof LineChartWidgetPayload.Type) => {
+  app,
+}: typeof LineChartWidgetPayload.Type & { app?: SizeChangedSender | null }) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
+  const lastSizeRef = useRef<{ width: number; height: number } | null>(null);
+  const scheduledRef = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -87,11 +94,35 @@ const LineChart = ({
       if (Number.isFinite(nextWidth) && nextWidth > 0) {
         setMeasuredWidth(nextWidth);
       }
+
+      if (!app) {
+        return;
+      }
+
+      if (scheduledRef.current) {
+        return;
+      }
+
+      scheduledRef.current = true;
+      requestAnimationFrame(() => {
+        scheduledRef.current = false;
+        const width = Math.ceil(entry.contentRect.width);
+        const height = Math.ceil(entry.contentRect.height);
+        if (!Number.isFinite(width) || !Number.isFinite(height)) {
+          return;
+        }
+        const lastSize = lastSizeRef.current;
+        if (lastSize?.width === width && lastSize?.height === height) {
+          return;
+        }
+        lastSizeRef.current = { width, height };
+        void app.sendSizeChanged({ width, height });
+      });
     });
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [app]);
 
   return (
     <div
@@ -112,22 +143,23 @@ export const WidgetApp = () => {
   const [payload, setPayload] = useState<
     typeof LineChartWidgetPayload.Type | null
   >(null);
+  const lastPayloadRef = useRef<string | null>(null);
+  const updatePayload = (next: typeof LineChartWidgetPayload.Type) => {
+    const serialized = JSON.stringify(next);
+    if (lastPayloadRef.current === serialized) {
+      return;
+    }
+    lastPayloadRef.current = serialized;
+    setPayload(next);
+  };
   const { app, isConnected, error } = useApp({
     appInfo: { name: "widget-line-chart", version: "0.1.0" },
     capabilities: {},
     onAppCreated: (app) => {
-      app.ontoolinput = (params) => {
-        const parsed = Schema.decodeUnknownSync(LineChartWidgetPayload)(
-          params.arguments,
-        );
-        if (parsed) {
-          setPayload(parsed);
-        }
-      };
       app.ontoolresult = (params) => {
         const parsed = extractPayloadFromToolResult(params);
         if (parsed) {
-          setPayload(parsed);
+          updatePayload(parsed);
         }
       };
     },
@@ -147,5 +179,5 @@ export const WidgetApp = () => {
     return <div style={{ padding: 16 }}>Waiting for data…</div>;
   }
 
-  return <LineChart {...payload} />;
+  return <LineChart {...payload} app={app} />;
 };
