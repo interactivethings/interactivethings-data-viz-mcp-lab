@@ -24,9 +24,7 @@ const extractPayloadFromToolResult = (
   const text = params.content?.find((item) => item.type === "text")?.text;
   if (text) {
     try {
-      return Option.getOrNull(
-        Schema.decodeUnknownOption(LineChartWidgetPayload)(JSON.parse(text)),
-      );
+      return Schema.decodeUnknownSync(LineChartWidgetPayload)(JSON.parse(text));
     } catch {
       return null;
     }
@@ -49,32 +47,26 @@ const LineChart = ({
       return undefined;
     }
 
-    const { width: layoutWidth, ...layoutOptions } = layout ?? {};
-    const plotWidth = layoutWidth ?? measuredWidth ?? undefined;
-    const lineOptions = { ...(marks ?? {}) };
-    const defaultX = marks?.x ?? "x";
-    const defaultY = marks?.y ?? "y";
-    if (defaultX !== undefined) {
-      lineOptions.x = defaultX;
-    }
-    if (defaultY !== undefined) {
-      lineOptions.y = defaultY;
-    }
-    const lineMark = Plot.line(data, lineOptions);
-    const ruleMark = Plot.ruleY([0]);
-    const plotOptions: Plot.PlotOptions = {
+    const { width: layoutWidth, ...layoutOptions } = layout;
+    const width = layoutWidth ?? measuredWidth ?? undefined;
+
+    const plot = Plot.plot({
       style: "--plot-background: var(--color-background-primary);",
       ...layoutOptions,
+      ...(width ? { width } : {}),
       color: {
         ...(layoutOptions.color ? layoutOptions.color : {}),
         scheme: "Category10",
       },
-      marks: [ruleMark, lineMark].filter(Boolean),
-    };
-    if (plotWidth !== undefined) {
-      plotOptions.width = plotWidth;
-    }
-    const plot = Plot.plot(plotOptions);
+      marks: [
+        Plot.ruleY([0]),
+        Plot.line(data, {
+          ...marks,
+          x: marks?.x ?? "x",
+          y: marks?.y ?? "y",
+        }),
+      ],
+    });
 
     containerRef.current.replaceChildren(plot);
     return () => plot.remove();
@@ -125,8 +117,8 @@ export const WidgetApp = () => {
     capabilities: {},
     onAppCreated: (app) => {
       app.ontoolinput = (params) => {
-        const parsed = Option.getOrNull(
-          Schema.decodeUnknownOption(LineChartWidgetPayload)(params.arguments),
+        const parsed = Schema.decodeUnknownSync(LineChartWidgetPayload)(
+          params.arguments,
         );
         if (parsed) {
           setPayload(parsed);
