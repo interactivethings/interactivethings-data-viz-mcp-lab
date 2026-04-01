@@ -10,8 +10,8 @@ const ScatterplotWidgetHtml = Effect.gen(function* () {
   const sourceSuffix = path.join("widget", "scatterplot");
   const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
   const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "scatterplot-widget.html")
-    : path.join(import.meta.dir, "widget/scatterplot/scatterplot-widget.html");
+    ? path.join(import.meta.dir, "widget-scatterplot.html")
+    : path.join(import.meta.dir, "widget/scatterplot/widget-scatterplot.html");
   return yield* fs.readFileString(htmlPath);
 });
 

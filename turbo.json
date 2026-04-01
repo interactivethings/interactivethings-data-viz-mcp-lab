@@ -8,7 +8,11 @@
       "outputs": ["dist/**"]
     },
     "server-mcp#build": {
-      "dependsOn": ["@repo/bar-chart-widget#build"]
+      "dependsOn": [
+        "@repo/widget-bar-chart#build",
+        "@repo/widget-line-chart#build",
+        "@repo/widget-scatterplot#build"
+      ]
     },
     "dev": {
       "persistent": true,

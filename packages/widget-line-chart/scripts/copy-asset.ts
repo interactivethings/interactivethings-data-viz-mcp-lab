@@ -13,10 +13,10 @@ if (mode !== "build" && mode !== "dev") {
 const sourcePath = path.resolve("dist/index.html");
 const destinationDir = path.resolve(
   mode === "dev"
-    ? "../../apps/server-mcp/src/widget/bar-chart"
-    : "../../apps/server-mcp/dist/widget/bar-chart",
+    ? "../../apps/server-mcp/src/widget/line-chart"
+    : "../../apps/server-mcp/dist/widget/line-chart",
 );
-const destinationPath = path.join(destinationDir, "bar-chart-widget.html");
+const destinationPath = path.join(destinationDir, "widget-line-chart.html");
 
 const waitForSource = async () => {
   if (existsSync(sourcePath)) {

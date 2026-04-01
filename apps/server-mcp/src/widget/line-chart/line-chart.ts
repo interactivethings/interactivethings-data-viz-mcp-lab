@@ -10,8 +10,8 @@ const LineChartWidgetHtml = Effect.gen(function* () {
   const sourceSuffix = path.join("widget", "line-chart");
   const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
   const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "line-chart-widget.html")
-    : path.join(import.meta.dir, "widget/line-chart/line-chart-widget.html");
+    ? path.join(import.meta.dir, "widget-line-chart.html")
+    : path.join(import.meta.dir, "widget/line-chart/widget-line-chart.html");
   return yield* fs.readFileString(htmlPath);
 });
 

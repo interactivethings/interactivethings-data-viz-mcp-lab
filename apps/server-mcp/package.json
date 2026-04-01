@@ -4,8 +4,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun run build:asset && bun build src/index.ts --outdir=dist --target=bun --minify",
-    "build:asset": "mkdir -p dist/widget/bar-chart dist/widget/line-chart dist/widget/scatterplot && cp src/widget/bar-chart/bar-chart-widget.html dist/widget/bar-chart/bar-chart-widget.html && cp src/widget/line-chart/line-chart-widget.html dist/widget/line-chart/line-chart-widget.html && cp src/widget/scatterplot/scatterplot-widget.html dist/widget/scatterplot/scatterplot-widget.html",
+    "build": "bun build src/index.ts --outdir=dist --target=bun --minify",
     "build:types": "tsc --emitDeclarationOnly",
     "dev": "bun --watch run src/index.ts",
     "inspector": "npx @mcpjam/inspector@latest",
@@ -22,7 +21,9 @@
   "devDependencies": {
     "@effect/language-service": "^0.84.2",
     "@effect/vitest": "4.0.0-beta.43",
-    "@repo/bar-chart-widget": "workspace:*",
+    "@repo/widget-bar-chart": "workspace:*",
+    "@repo/widget-line-chart": "workspace:*",
+    "@repo/widget-scatterplot": "workspace:*",
     "@repo/config-typescript": "workspace:*",
     "@types/bun": "1.3.11",
     "vitest": "^4.1.2"
