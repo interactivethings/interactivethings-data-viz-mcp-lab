@@ -24,7 +24,6 @@ export const BarChartWidgetResourceLayer = makeUiResource(
     meta: {
       prefersBorder: false,
     },
-    withAppsSdk: true,
   },
 );
 
@@ -36,12 +35,6 @@ export const RenderBarChartWidgetTool = makeUiRenderTool(
     description: "Render the bar chart widget UI",
     parameters: BarChartWidgetPayload,
     success: BarChartWidgetPayload,
-    openai: {
-      toolInvocation: {
-        invoking: "Loading bar chart widget...",
-        invoked: "Bar chart widget ready",
-      },
-    },
   },
 );
 
