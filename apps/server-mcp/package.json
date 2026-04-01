@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "bun run build:asset && bun build src/index.ts --outdir=dist --target=bun --minify",
-    "build:asset": "mkdir -p dist/widget/get-time && cp src/widget/get-time/get-time.html dist/widget/get-time/get-time.html",
+    "build:asset": "mkdir -p dist/widget/bar-chart dist/widget/line-chart dist/widget/scatterplot && cp src/widget/bar-chart/bar-chart-widget.html dist/widget/bar-chart/bar-chart-widget.html && cp src/widget/line-chart/line-chart-widget.html dist/widget/line-chart/line-chart-widget.html && cp src/widget/scatterplot/scatterplot-widget.html dist/widget/scatterplot/scatterplot-widget.html",
     "build:types": "tsc --emitDeclarationOnly",
     "dev": "bun --watch run src/index.ts",
     "inspector": "npx @mcpjam/inspector@latest",
