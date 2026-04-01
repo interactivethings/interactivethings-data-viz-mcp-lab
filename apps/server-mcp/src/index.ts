@@ -1,7 +1,7 @@
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { ObservabilityLive } from "@repo/observability";
 import { Config, Effect, Layer, Schema } from "effect";
-import { McpServer, Tool, Toolkit } from "effect/unstable/ai";
+import { McpServer, Toolkit } from "effect/unstable/ai";
 import { DevTools } from "effect/unstable/devtools";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import {
@@ -9,25 +9,9 @@ import {
   RenderBarChartWidgetTool,
   renderBarChartWidgetHandler,
 } from "./widget/bar-chart/bar-chart";
-import {
-  GetTimeResourceLayer,
-  GetTimeTool,
-  getTimeHandler,
-  RenderGetTimeTool,
-  renderGetTimeHandler,
-} from "./widget/get-time/get-time";
 
 // Define Resources
 const ResourceLayer = Layer.mergeAll(
-  McpServer.resource({
-    uri: "app://primer",
-    name: "Primer Document",
-    description: "Documentation for the application",
-    content: Effect.succeed(
-      "This is a sample primer document to demonstrate MCP server capabilities.",
-    ),
-  }),
-  GetTimeResourceLayer,
   BarChartWidgetResourceLayer,
   // You can add more resources here
 );
@@ -50,22 +34,6 @@ const PromptLayer = Layer.mergeAll(
 
 // Define Toolkit
 class AiTools extends Toolkit.make(
-  Tool.make("GetDadJoke", {
-    description: "Get a hilarious dad joke from the ICanHazDadJoke API",
-    success: Schema.String,
-    failure: Schema.Never,
-    parameters: Schema.Struct({
-      searchTerm: Schema.String.annotate({
-        description: "The search term to use to find dad jokes",
-      }),
-    }),
-  })
-    .annotate(Tool.Readonly, true)
-    .annotate(Tool.Destructive, false)
-    .annotate(Tool.OpenWorld, false)
-    .annotate(Tool.Idempotent, true),
-  RenderGetTimeTool,
-  GetTimeTool,
   RenderBarChartWidgetTool,
   // You can add more tools here
 ) {}
@@ -73,14 +41,7 @@ class AiTools extends Toolkit.make(
 const ToolLayer = McpServer.toolkit(AiTools).pipe(
   Layer.provide(
     AiTools.toLayer({
-      GetDadJoke: (params) =>
-        Effect.succeed(
-          `Here's a dad joke about ${params.searchTerm}: Why don't ${params.searchTerm}s ever get lost? Because they always follow the map!`,
-        ),
-      render_get_time: () => renderGetTimeHandler(),
-      get_time: () => getTimeHandler(),
-      render_bar_chart_widget: (payload) =>
-        renderBarChartWidgetHandler(payload),
+      render_bar_chart_widget: renderBarChartWidgetHandler,
       // add implementation for more tools here
     }),
   ),
@@ -90,15 +51,12 @@ const ToolLayer = McpServer.toolkit(AiTools).pipe(
 const McpLive = Layer.mergeAll(ResourceLayer, PromptLayer, ToolLayer);
 
 const ServerConfig = Config.all({
-  port: Config.number("PORT").pipe(
-    Config.orElse(() => Config.number("MCP_PORT")),
-    Config.withDefault(9009),
-  ),
+  port: Config.number("PORT").pipe(Config.withDefault(9009)),
   enableDevTools: Config.boolean("DEVTOOLS").pipe(Config.withDefault(false)),
 });
 
 const McpRouter = McpServer.layerHttp({
-  name: "BEVR MCP Server",
+  name: "IxT Data Viz MCP Server",
   version: "0.1.0",
   path: "/mcp",
   extensions: {
