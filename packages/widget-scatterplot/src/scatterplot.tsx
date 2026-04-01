@@ -35,14 +35,23 @@ const extractPayloadFromToolResult = (
   return null;
 };
 
+type SizeChangedSender = {
+  sendSizeChanged: (params: { width?: number; height?: number }) => unknown;
+};
+
 const Scatterplot = ({
   data,
   layout,
   marks,
-}: typeof ScatterplotWidgetPayload.Type) => {
+  app,
+}: typeof ScatterplotWidgetPayload.Type & {
+  app?: SizeChangedSender | null;
+}) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
+  const lastSizeRef = useRef<{ width: number; height: number } | null>(null);
+  const scheduledRef = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -90,11 +99,35 @@ const Scatterplot = ({
       if (Number.isFinite(nextWidth) && nextWidth > 0) {
         setMeasuredWidth(nextWidth);
       }
+
+      if (!app) {
+        return;
+      }
+
+      if (scheduledRef.current) {
+        return;
+      }
+
+      scheduledRef.current = true;
+      requestAnimationFrame(() => {
+        scheduledRef.current = false;
+        const width = Math.ceil(entry.contentRect.width);
+        const height = Math.ceil(entry.contentRect.height);
+        if (!Number.isFinite(width) || !Number.isFinite(height)) {
+          return;
+        }
+        const lastSize = lastSizeRef.current;
+        if (lastSize?.width === width && lastSize?.height === height) {
+          return;
+        }
+        lastSizeRef.current = { width, height };
+        void app.sendSizeChanged({ width, height });
+      });
     });
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [app]);
 
   return (
     <div
@@ -115,22 +148,23 @@ export const WidgetApp = () => {
   const [payload, setPayload] = useState<
     typeof ScatterplotWidgetPayload.Type | null
   >(null);
+  const lastPayloadRef = useRef<string | null>(null);
+  const updatePayload = (next: typeof ScatterplotWidgetPayload.Type) => {
+    const serialized = JSON.stringify(next);
+    if (lastPayloadRef.current === serialized) {
+      return;
+    }
+    lastPayloadRef.current = serialized;
+    setPayload(next);
+  };
   const { app, isConnected, error } = useApp({
     appInfo: { name: "widget-scatterplot", version: "0.1.0" },
     capabilities: {},
     onAppCreated: (app) => {
-      app.ontoolinput = (params) => {
-        const parsed = Schema.decodeUnknownSync(ScatterplotWidgetPayload)(
-          params.arguments,
-        );
-        if (parsed) {
-          setPayload(parsed);
-        }
-      };
       app.ontoolresult = (params) => {
         const parsed = extractPayloadFromToolResult(params);
         if (parsed) {
-          setPayload(parsed);
+          updatePayload(parsed);
         }
       };
     },
@@ -150,5 +184,5 @@ export const WidgetApp = () => {
     return <div style={{ padding: 16 }}>Waiting for data…</div>;
   }
 
-  return <Scatterplot {...payload} />;
+  return <Scatterplot {...payload} app={app} />;
 };
