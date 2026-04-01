@@ -58,6 +58,10 @@ export const PlotLayoutProps = Schema.Struct({
 
   inset: NumberGreaterThanZero,
   grid: Schema.Boolean,
+
+  color: Schema.Struct({
+    legend: Schema.Boolean,
+  }),
 }).mapFields(Struct.map(Schema.optionalKey));
 
 export const BarMarkProps = Schema.Struct({

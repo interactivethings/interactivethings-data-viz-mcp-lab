@@ -69,6 +69,10 @@ const BarChart = ({
     const plotOptions: Plot.PlotOptions = {
       style: "--plot-background: var(--color-background-primary);",
       ...layoutOptions,
+      color: {
+        ...(layoutOptions.color ? layoutOptions.color : {}),
+        scheme: "Category10",
+      },
       marks: [ruleMark, barMark].filter(Boolean),
     };
     if (plotWidth !== undefined) {
