@@ -1,7 +1,8 @@
 # @repo/presence
 
-Presence tracking service for the [bEvr stack](../../README.md). Maintains
-connected client state and publishes presence events for WebSocket flows.
+Presence tracking service for the [MCP Data Visualization Lab](../../README.md).
+Maintains connected client state and publishes presence events for WebSocket
+flows.
 
 ## Overview
 
@@ -51,4 +52,4 @@ const program = Effect.gen(function* () {
 
 ## Learn More
 
-- [bEvr Stack Overview](../../README.md)
+- [Lab Overview](../../README.md)

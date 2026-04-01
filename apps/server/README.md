@@ -1,7 +1,7 @@
 # Server API
 
 [Effect Platform](https://effect.website/docs/platform) backend API with
-TypeScript, part of the [bEvr stack](../../README.md).
+TypeScript, part of the [MCP Data Visualization Lab](../../README.md).
 
 ## Stack
 
@@ -94,4 +94,4 @@ automatically handles Effect execution and error propagation.
 ## Learn More
 
 - [Effect Documentation](https://effect.website)
-- [bEvr Stack Overview](../../README.md)
+- [Lab Overview](../../README.md)

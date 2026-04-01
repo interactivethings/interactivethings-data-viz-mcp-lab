@@ -1,7 +1,7 @@
 # @repo/ai
 
-Shared AI tooling for the [bEvr stack](../../README.md), built with Effect and
-@effect/ai.
+Shared AI tooling for the [MCP Data Visualization Lab](../../README.md), built with
+Effect and @effect/ai.
 
 ## Overview
 
@@ -51,4 +51,4 @@ const AppLive = ChatService.Default.pipe(Layer.provideMerge(AiLive));
 ## Learn More
 
 - [@effect/ai Documentation](https://github.com/tim-smart/effect-io-ai)
-- [bEvr Stack Overview](../../README.md)
+- [Lab Overview](../../README.md)

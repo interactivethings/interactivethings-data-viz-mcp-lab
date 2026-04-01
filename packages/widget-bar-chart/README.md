@@ -1,6 +1,6 @@
 # Bar Chart Widget
 
-Builds a single-file MCP UI widget that renders a bar chart.
+Single-file MCP App widget that renders a bar chart.
 
 ## Scripts
 
