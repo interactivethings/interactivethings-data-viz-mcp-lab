@@ -1,16 +1,17 @@
-import { join as joinPath } from "node:path";
-import { Effect, FileSystem, Schema } from "effect";
+import { BarChartWidgetPayload } from "@repo/domain/Chart";
+import { Effect, FileSystem, Path } from "effect";
 import { makeUiRenderTool, makeUiResource } from "../../UiResource";
 
 const BarChartWidgetResourceUri = "ui://bar-chart";
 
 const BarChartWidgetHtml = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const sourceSuffix = joinPath("widget", "bar-chart");
+  const path = yield* Path.Path;
+  const sourceSuffix = path.join("widget", "bar-chart");
   const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
   const htmlPath = isSourcePath
-    ? joinPath(import.meta.dir, "bar-chart-widget.html")
-    : joinPath(import.meta.dir, "widget/bar-chart/bar-chart-widget.html");
+    ? path.join(import.meta.dir, "bar-chart-widget.html")
+    : path.join(import.meta.dir, "widget/bar-chart/bar-chart-widget.html");
   return yield* fs.readFileString(htmlPath);
 });
 
@@ -26,29 +27,6 @@ export const BarChartWidgetResourceLayer = makeUiResource(
     withAppsSdk: true,
   },
 );
-
-const BarChartNumber = Schema.Union([Schema.Number, Schema.NumberFromString]);
-
-const BarChartDatum = Schema.Struct({
-  category: Schema.String,
-  value: BarChartNumber,
-});
-
-const BarChartWidgetProps = Schema.Struct({
-  title: Schema.optional(Schema.String),
-  valueLabel: Schema.optional(Schema.String),
-  maxWidth: Schema.optional(BarChartNumber),
-  width: Schema.optional(BarChartNumber),
-  height: Schema.optional(BarChartNumber),
-  showLabels: Schema.optional(Schema.Boolean),
-  maxY: Schema.optional(BarChartNumber),
-});
-
-export const BarChartWidgetPayload = Schema.Struct({
-  data: Schema.optional(Schema.Array(BarChartDatum)),
-  dataUrl: Schema.optional(Schema.String),
-  props: Schema.optional(BarChartWidgetProps),
-});
 
 export const RenderBarChartWidgetTool = makeUiRenderTool(
   BarChartWidgetResourceUri,

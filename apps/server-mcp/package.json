@@ -8,7 +8,7 @@
     "build:assets": "bun run --cwd ../../packages/bar-chart-widget build && mkdir -p dist/widget/bar-chart && cp ../../packages/bar-chart-widget/dist/index.html dist/widget/bar-chart/bar-chart-widget.html && mkdir -p dist/widget/get-time && cp src/widget/get-time/get-time.html dist/widget/get-time/get-time.html && mkdir -p src/widget/widget-app && cp ../../packages/bar-chart-widget/dist/index.html src/widget/bar-chart/bar-chart-widget.html",
     "build:types": "tsc --emitDeclarationOnly",
     "dev": "bun --watch run src/index.ts",
-    "inspector": "bun run dev & sleep 2 && npx @mcpjam/inspector@latest; kill %1",
+    "inspector": "npx @mcpjam/inspector@latest",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
     "clean": "git clean -xdf .cache .turbo dist node_modules"
