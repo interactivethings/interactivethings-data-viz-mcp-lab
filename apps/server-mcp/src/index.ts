@@ -15,11 +15,17 @@ import {
   RenderLineChartWidgetTool,
   renderLineChartWidgetHandler,
 } from "./widget/line-chart/line-chart";
+import {
+  RenderScatterplotWidgetTool,
+  renderScatterplotWidgetHandler,
+  ScatterplotWidgetResourceLayer,
+} from "./widget/scatterplot/scatterplot";
 
 // Define Resources
 const ResourceLayer = Layer.mergeAll(
   BarChartWidgetResourceLayer,
   LineChartWidgetResourceLayer,
+  ScatterplotWidgetResourceLayer,
   // You can add more resources here
 );
 
@@ -33,6 +39,7 @@ const PromptLayer = Layer.mergeAll(
 class AiTools extends Toolkit.make(
   RenderBarChartWidgetTool,
   RenderLineChartWidgetTool,
+  RenderScatterplotWidgetTool,
   // You can add more tools here
 ) {}
 
@@ -41,6 +48,7 @@ const ToolLayer = McpServer.toolkit(AiTools).pipe(
     AiTools.toLayer({
       render_bar_chart_widget: renderBarChartWidgetHandler,
       render_line_chart_widget: renderLineChartWidgetHandler,
+      render_scatterplot_widget: renderScatterplotWidgetHandler,
       // add implementation for more tools here
     }),
   ),
