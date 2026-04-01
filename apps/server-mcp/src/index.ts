@@ -10,10 +10,16 @@ import {
   RenderBarChartWidgetTool,
   renderBarChartWidgetHandler,
 } from "./widget/bar-chart/bar-chart";
+import {
+  LineChartWidgetResourceLayer,
+  RenderLineChartWidgetTool,
+  renderLineChartWidgetHandler,
+} from "./widget/line-chart/line-chart";
 
 // Define Resources
 const ResourceLayer = Layer.mergeAll(
   BarChartWidgetResourceLayer,
+  LineChartWidgetResourceLayer,
   // You can add more resources here
 );
 
@@ -26,6 +32,7 @@ const PromptLayer = Layer.mergeAll(
 // Define Toolkit
 class AiTools extends Toolkit.make(
   RenderBarChartWidgetTool,
+  RenderLineChartWidgetTool,
   // You can add more tools here
 ) {}
 
@@ -33,6 +40,7 @@ const ToolLayer = McpServer.toolkit(AiTools).pipe(
   Layer.provide(
     AiTools.toLayer({
       render_bar_chart_widget: renderBarChartWidgetHandler,
+      render_line_chart_widget: renderLineChartWidgetHandler,
       // add implementation for more tools here
     }),
   ),
