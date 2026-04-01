@@ -1,7 +1,7 @@
 # @repo/domain
 
-Shared types and schemas for the [bEvr stack](../../README.md), built with
-Effect Schema.
+Shared types and schemas for the [MCP Data Visualization Lab](../../README.md),
+built with Effect Schema.
 
 ## Overview
 
@@ -44,4 +44,4 @@ src/
 ## Learn More
 
 - [Effect Schema Documentation](https://effect.website/docs/schema)
-- [bEvr Stack Overview](../../README.md)
+- [Lab Overview](../../README.md)

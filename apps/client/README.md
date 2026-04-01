@@ -1,7 +1,7 @@
 # Client App
 
 React frontend built with Vite and TypeScript, part of the
-[bEvr stack](../../README.md).
+[MCP Data Visualization Lab](../../README.md).
 
 ## Stack
 
@@ -79,4 +79,4 @@ Tests are colocated with source files using the `*.test.tsx` pattern.
 
 - [React Documentation](https://react.dev)
 - [Vite Documentation](https://vitejs.dev)
-- [bEvr Stack Overview](../../README.md)
+- [Lab Overview](../../README.md)

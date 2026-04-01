@@ -1,6 +1,6 @@
 # E2E Tests
 
-End-to-end tests using Playwright.
+End-to-end tests using Playwright for the MCP Data Visualization Lab.
 
 ## Running Tests
 

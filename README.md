@@ -1,25 +1,51 @@
-# bEvr Stack
+# MCP Data Visualization Lab
 
-A modern full-stack TypeScript monorepo with end-to-end type safety, using Bun,
-Effect, Vite, and React. Heavily inspired by the [bhvr](https://bhvr.dev/) stack
-but the addition of Effect and Turborepo. Includes a Model Context Protocol
-(MCP) server for AI assistant integrations.
+Generative UI for data visualization. This lab explores how MCP Apps and web
+components can give LLM chat applications first-class data visualization tools.
+The goal is to prove a white-label approach: a baseline chart library that can
+be branded and embedded into chat experiences.
 
-![screenshot of client app](./e2e/smoke.spec.ts-snapshots/app-layout-chromium-darwin.png)
+![screenshot of client app](./e2e/smoke.spec.ts-snapshots/screenshot.png)
 
-## Features
+MCPJam Inspector: https://app.mcpjam.com/shared/edu-mcp-app-live/1CD8UxW3lT1FwVFXcGZM_
 
-- **End-to-end TypeScript**: Full type safety from client to server
-- **Shared Domain**: Common types and utilities across all apps
-- **Effect Integration**: Built for composable, functional programming with
-  [Effect](https://effect.website)
-- **MCP Server**: [Model Context Protocol](https://modelcontextprotocol.io/)
-  server for AI assistant tools and resources
-- **Modern Tooling**: [Turborepo](https://turbo.build/), [Bun](https://bun.sh/),
-  [Vite](https://vitejs.dev/), and [React](https://react.dev/)
-- **Zero Config**: Pre-configured linting and formatting with
-  [Biome](https://biomejs.dev)
-- **Flexible Deployment**: Deploy anywhere without vendor lock-in
+## What This Lab Explores
+
+- MCP App patterns for data visualization in LLM chat
+- Web component chart primitives built with Plot
+- A white-label design system driven by host CSS variables
+- Composition between web components and visualization vocabularies
+
+## Goals
+
+1. Build web component charts with Plot
+2. Expose UI tools to LLMs for controlling and interacting with charts
+3. Create a design system that adapts to host interfaces
+4. Provide chart tools for:
+   - Line chart
+   - Bar chart
+   - Scatterplot
+5. Bonus: publish components as a package or registry
+
+## Achieved So Far
+
+- Bar chart MCP App widget
+- Line chart MCP App widget
+- Scatterplot MCP App widget
+- MCP server wiring to serve MCP Apps to chat clients
+
+## What’s Next
+
+- Expand the chart catalog (compositional layouts, multi-series, annotations)
+- Theming system based on host CSS variables
+- Connect to a real data source (Postgres-backed reporting dashboard)
+- Explore web component composition patterns for chart vocabularies
+
+## Side Quests
+
+- Build a separate MCP server for the reporting dashboard and connect it to chat
+- Prove a host-injected theming system for MCP Apps
+- Test composition patterns with Plot/D3 and vocabulary primitives
 
 ## Quick Start
 
@@ -36,7 +62,7 @@ bun run build
 
 ### Formatting and Linting
 
-Format and lint the codebase using Ultracite:
+Format and lint the codebase using Biome:
 
 ```bash
 # Format code
@@ -46,7 +72,7 @@ bun format
 bun lint
 
 # Type check
-bun run type-check
+bun type-check
 ```
 
 ### Testing
@@ -99,7 +125,10 @@ should be committed to git. Update them when UI changes are intentional.
 │   ├── config-typescript/  # TypeScript configurations
 │   ├── domain/             # Shared Schema definitions
 │   ├── observability/      # OpenTelemetry setup
-│   └── presence/           # Presence tracking service
+│   ├── presence/           # Presence tracking service
+│   ├── widget-bar-chart/   # MCP App bar chart widget
+│   ├── widget-line-chart/  # MCP App line chart widget
+│   └── widget-scatterplot/ # MCP App scatterplot widget
 ├── docker-compose.yaml     # Docker Compose configuration for deployment
 ├── package.json            # Root package.json with workspaces
 └── turbo.json              # Turborepo configuration
@@ -122,6 +151,9 @@ should be committed to git. Update them when UI changes are intentional.
 | `@repo/ai`                | AI tooling and service layers built on [@effect/ai](https://github.com/tim-smart/effect-io-ai)                     |
 | `@repo/observability`     | Shared OpenTelemetry setup                                                                                         |
 | `@repo/presence`          | Presence tracking service for WebSocket clients                                                                    |
+| `widget-bar-chart`        | MCP App bar chart widget                                                                                           |
+| `widget-line-chart`       | MCP App line chart widget                                                                                          |
+| `widget-scatterplot`      | MCP App scatterplot widget                                                                                         |
 
 ## Development
 
@@ -178,6 +210,7 @@ import { ApiResponse } from "@repo/domain/Api";
 
 ## Learn More
 
-- [Turborepo](https://turborepo.com/docs)
+- [MCP Apps Spec](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx)
+- [MCP UI](https://github.com/MCP-UI-Org/mcp-ui)
 - [Effect](https://effect.website/docs/introduction)
-- [Vite](https://vitejs.dev/guide/)
+- [Plot](https://observablehq.com/plot/)

@@ -1,6 +1,7 @@
 # @repo/observability
 
-Shared OpenTelemetry setup for the [bEvr stack](../../README.md) using Effect.
+Shared OpenTelemetry setup for the [MCP Data Visualization Lab](../../README.md)
+using Effect.
 
 ## Overview
 
@@ -53,4 +54,4 @@ const HttpLive = HttpLayerRouter.serve(Router).pipe(
 ## Learn More
 
 - [Effect OpenTelemetry](https://effect.website/docs/guides/opentelemetry)
-- [bEvr Stack Overview](../../README.md)
+- [Lab Overview](../../README.md)

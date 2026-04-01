@@ -2,7 +2,7 @@
 
 [Model Context Protocol](https://modelcontextprotocol.io/) server built with
 [Effect Platform](https://effect.website/docs/platform) and TypeScript, part of
-the [bEvr stack](../../README.md).
+the [MCP Data Visualization Lab](../../README.md).
 
 ## Stack
 
@@ -95,4 +95,4 @@ const UserToolkitLive = UserToolkit.toLayer({
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io/)
 - [@effect/ai Documentation](https://github.com/tim-smart/effect-io-ai)
 - [Effect Documentation](https://effect.website)
-- [bEvr Stack Overview](../../README.md)
+- [Lab Overview](../../README.md)

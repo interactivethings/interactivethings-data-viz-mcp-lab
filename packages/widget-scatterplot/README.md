@@ -1,6 +1,6 @@
 # Scatterplot Widget
 
-Builds a single-file MCP UI widget that renders a scatterplot.
+Single-file MCP App widget that renders a scatterplot.
 
 ## Scripts
 

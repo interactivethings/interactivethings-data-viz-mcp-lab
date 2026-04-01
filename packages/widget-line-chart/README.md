@@ -1,6 +1,6 @@
 # Line Chart Widget
 
-Builds a single-file MCP UI widget that renders a line chart.
+Single-file MCP App widget that renders a line chart.
 
 ## Scripts
 
