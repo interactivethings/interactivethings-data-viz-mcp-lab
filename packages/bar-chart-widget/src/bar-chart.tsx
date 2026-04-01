@@ -1,11 +1,6 @@
 import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import * as Plot from "@observablehq/plot";
-import {
-  BarChartWidgetPayload,
-  BarDatum,
-  BarMarkProps,
-  PlotLayoutProps,
-} from "@repo/domain/Chart";
+import { BarChartWidgetPayload } from "@repo/domain/Chart";
 import { Option, Schema } from "effect";
 import { useEffect, useRef, useState } from "react";
 
@@ -57,16 +52,10 @@ const BarChart = ({
 
     const { width: layoutWidth, ...layoutOptions } = layout ?? {};
     const plotWidth = layoutWidth ?? measuredWidth ?? undefined;
-    const hasXExtent = marks?.x1 !== undefined || marks?.x2 !== undefined;
-    const hasYExtent = marks?.y1 !== undefined || marks?.y2 !== undefined;
     const isHorizontal = direction === "horizontal";
     const barOptions = (marks ?? {}) as Plot.BarXOptions | Plot.BarYOptions;
-    const defaultX =
-      marks?.x ??
-      (hasXExtent ? undefined : isHorizontal ? "value" : "category");
-    const defaultY =
-      marks?.y ??
-      (hasYExtent ? undefined : isHorizontal ? "category" : "value");
+    const defaultX = marks?.x ?? (isHorizontal ? "value" : "category");
+    const defaultY = marks?.y ?? (isHorizontal ? "category" : "value");
     if (defaultX !== undefined) {
       barOptions.x = defaultX;
     }
@@ -74,8 +63,8 @@ const BarChart = ({
       barOptions.y = defaultY;
     }
     const barMark = isHorizontal
-      ? Plot.barX(data, barOptions as Plot.BarXOptions)
-      : Plot.barY(data, barOptions as Plot.BarYOptions);
+      ? Plot.barX(data, barOptions)
+      : Plot.barY(data, barOptions);
     const ruleMark = isHorizontal ? Plot.ruleX([0]) : Plot.ruleY([0]);
     const plotOptions: Plot.PlotOptions = {
       style: "--plot-background: var(--color-background-primary);",
@@ -136,9 +125,6 @@ export const WidgetApp = () => {
     capabilities: {},
     onAppCreated: (app) => {
       app.ontoolinput = (params) => {
-        console.log(
-          Schema.decodeUnknownOption(BarChartWidgetPayload)(params.arguments),
-        );
         const parsed = Option.getOrNull(
           Schema.decodeUnknownOption(BarChartWidgetPayload)(params.arguments),
         );
@@ -147,7 +133,6 @@ export const WidgetApp = () => {
         }
       };
       app.ontoolresult = (params) => {
-        console.log(Schema.decodeUnknownOption(BarChartWidgetPayload)(params));
         const parsed = extractPayloadFromToolResult(params);
         if (parsed) {
           setPayload(parsed);
