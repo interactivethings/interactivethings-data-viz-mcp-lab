@@ -1,9 +1,10 @@
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { ObservabilityLive } from "@repo/observability";
-import { Config, Effect, Layer, Schema } from "effect";
+import { Config, Effect, Layer } from "effect";
 import { McpServer, Toolkit } from "effect/unstable/ai";
 import { DevTools } from "effect/unstable/devtools";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
+import { barChartOneShot } from "./prompt/bar-chart-one-shot";
 import {
   BarChartWidgetResourceLayer,
   RenderBarChartWidgetTool,
@@ -18,17 +19,7 @@ const ResourceLayer = Layer.mergeAll(
 
 // Define Prompts
 const PromptLayer = Layer.mergeAll(
-  McpServer.prompt({
-    name: "Hello Prompt",
-    description: "A simple greeting prompt",
-    parameters: {
-      name: Schema.String,
-    },
-    content: ({ name }) =>
-      Effect.succeed(
-        `Hello, ${name}! Welcome to the MCP server demonstration.`,
-      ),
-  }),
+  barChartOneShot,
   // You can add more prompts here
 );
 
