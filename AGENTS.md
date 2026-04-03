@@ -59,6 +59,7 @@ commits in these repos to ensure the LLM references current code:
 - `.reference/effect/`
 - `.reference/effect-atom/`
 - `.reference/edu_mcp-apps/`
+- `.reference/edu_effect-dynamic-tool/`
 - `.reference/ext-apps/`
 - `.reference/spec/`
 - `.reference/mcp-ui/`
@@ -69,6 +70,7 @@ If any of the folders are missing (they are git ignored), clone them into
 - `https://github.com/Effect-TS/effect-smol.git` -> `.reference/effect/`
 - `https://github.com/Effect-TS/effect-atom.git` -> `.reference/effect-atom/`
 - `https://github.com/lloydrichards/edu_mcp-apps.git` -> `.reference/edu_mcp-apps/`
+- `https://github.com/lloydrichards/edu_effect-dynamic-tool.git` -> `.reference/edu_effect-dynamic-tool/`
 - `https://github.com/modelcontextprotocol/ext-apps.git` -> `.reference/ext-apps/`
 - `https://github.com/modelcontextprotocol/modelcontextprotocol.git` -> `.reference/spec/`
 - `https://github.com/MCP-UI-Org/mcp-ui.git` -> `.reference/mcp-ui/`
