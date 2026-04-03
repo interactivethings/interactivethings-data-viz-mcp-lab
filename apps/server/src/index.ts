@@ -1,5 +1,10 @@
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
-import { ChatServiceLive, FastModelLive, SampleToolkitLive } from "@repo/ai";
+import {
+  ChatServiceLive,
+  FastModelLive,
+  McpClientServiceLive,
+  SampleToolkitLive,
+} from "@repo/ai";
 import { Api } from "@repo/domain/Api";
 import { EventRpc } from "@repo/domain/Rpc";
 import { WebSocketRpc } from "@repo/domain/WebSocket";
@@ -14,6 +19,7 @@ import { HealthGroupLive } from "./Api/Health";
 import { HelloGroupLive } from "./Api/Hello";
 import { EventRpcLive } from "./Rpc/Event";
 import { PresenceRpcLive } from "./Rpc/Presence";
+import { McpUiRoutes } from "./routes/mcp-ui";
 
 // ============================================================================
 // Server Configuration
@@ -92,6 +98,7 @@ const HttpLive = Effect.gen(function* () {
     ApiRouter,
     HttpRpcRouter,
     WebSocketRpcRouter,
+    McpUiRoutes,
   ).pipe(
     Layer.provide(
       HttpRouter.cors({
@@ -105,6 +112,7 @@ const HttpLive = Effect.gen(function* () {
 
   return HttpRouter.serve(AllRouters).pipe(
     HttpServer.withLogAddress,
+    Layer.provideMerge(McpClientServiceLive),
     Layer.provideMerge(DevToolsLive),
     Layer.provideMerge(ObservabilityLive),
     Layer.provideMerge(BunHttpServer.layerConfig(ServerConfig)),

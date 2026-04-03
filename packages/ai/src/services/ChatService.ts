@@ -1,6 +1,7 @@
 import type { ChatStreamPart } from "@repo/domain/Chat";
 import { Cause, Effect, Layer, Queue, ServiceMap, String } from "effect";
-import { Chat, type LanguageModel, Prompt } from "effect/unstable/ai";
+import { Chat, type LanguageModel, Prompt, Toolkit } from "effect/unstable/ai";
+import { McpToolkit } from "../toolkits/McpToolkit";
 import { SampleToolkit } from "../toolkits/SampleToolkit";
 import { runAgenticLoop } from "../workflow/AgenticLoop";
 
@@ -32,13 +33,44 @@ export class ChatService extends ServiceMap.Service<ChatServiceApi>()(
               |You are a helpful general assistant.
               |You have access to tools and should use them when appropriate.
               |Be concise and direct in your responses.
+              |
+              |For MCP chart tools (render_*_widget), pass arguments as JSON in a string field named "payload".
+              |Example: { "payload": "{"data":[{"x":1,"y":2}],"marks":{"x":"x","y":"y"}}" }
             `);
 
             const session = yield* Chat.fromPrompt(
               Prompt.make(history).pipe(Prompt.setSystem(systemMessage)),
             );
 
-            const toolkit = yield* SampleToolkit;
+            const mcpToolkit = yield* McpToolkit.pipe(
+              Effect.catch((error) =>
+                Effect.gen(function* () {
+                  yield* Effect.logError(
+                    `MCP toolkit unavailable: ${
+                      error instanceof Error
+                        ? error.message
+                        : globalThis.String(error)
+                    }`,
+                  );
+                  return {
+                    toolkit: Toolkit.empty,
+                    layer: Layer.empty,
+                    tools: [],
+                  } as const;
+                }),
+              ),
+            );
+
+            const mergedToolkit = Toolkit.merge(
+              SampleToolkit,
+              mcpToolkit.toolkit,
+            );
+            yield* Effect.log(
+              `Toolkits ready: sample=${Object.keys(SampleToolkit.tools).length}, mcp=${mcpToolkit.tools.length}`,
+            );
+            const toolkit = yield* mergedToolkit
+              .asEffect()
+              .pipe(Effect.provide(mcpToolkit.layer));
 
             yield* runAgenticLoop({
               chat: session,
