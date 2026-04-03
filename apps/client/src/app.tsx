@@ -33,11 +33,8 @@ function App() {
         <p className="text-muted-foreground">A typesafe fullstack monorepo</p>
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-6 auto-rows-[30rem] lg:auto-rows-[22rem] lg:grid-cols-2">
+      <div className="w-full h-200">
         <ChatBox />
-        <PresencePanel className="h-full" />
-        <RestCard />
-        <RpcCard />
       </div>
       <footer className="w-full flex justify-between">
         <Button
