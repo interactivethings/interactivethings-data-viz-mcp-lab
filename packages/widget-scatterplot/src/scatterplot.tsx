@@ -58,12 +58,13 @@ const Scatterplot = ({
       return undefined;
     }
 
-    const { width: layoutWidth, ...layoutOptions } = layout;
+    const layoutOptions = layout ?? {};
+    const { width: layoutWidth, ...restLayoutOptions } = layoutOptions;
     const width = layoutWidth ?? measuredWidth ?? undefined;
 
     const plot = Plot.plot({
       style: "--plot-background: var(--color-background-primary);",
-      ...layoutOptions,
+      ...restLayoutOptions,
       ...(width ? { width } : {}),
       color: {
         ...(layoutOptions.color ? layoutOptions.color : {}),
