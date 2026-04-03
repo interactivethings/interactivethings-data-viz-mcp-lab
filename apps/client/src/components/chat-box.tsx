@@ -1,8 +1,11 @@
 import { useAtom } from "@effect/atom-react";
+import { getToolUiResourceUri } from "@modelcontextprotocol/ext-apps/app-bridge";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { ChatResponse, MessageSegment } from "@repo/domain/Chat";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { AlertCircle, Loader2, Send } from "lucide-react";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
+import { McpUiPanel } from "@/components/mcp-ui-panel";
 import { chatAtom } from "@/lib/atoms/chat-atom";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
@@ -46,6 +49,10 @@ export function ChatBox() {
   >([]);
   const readinessAttemptRef = useRef(0);
   const lastCompletionKeyRef = useRef<string | null>(null);
+  const [toolUiMap, setToolUiMap] = useState<Map<string, string>>(new Map());
+  const [toolUiError, setToolUiError] = useState<string | null>(null);
+  const serverBaseUrl =
+    import.meta.env.VITE_SERVER_URL ?? "http://localhost:9000";
 
   const currentResult: ChatResponse = AsyncResult.getOrElse(
     result,
@@ -84,6 +91,40 @@ export function ChatBox() {
 
     return () => window.clearTimeout(timeoutId);
   }, [currentResult, isFailure, runChat]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadTools = async () => {
+      try {
+        const response = await fetch(`${serverBaseUrl}/mcp-ui/tools`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`Tool list request failed (${response.status})`);
+        }
+        const payload = (await response.json()) as { tools: Tool[] };
+        const map = new Map<string, string>();
+        payload.tools.forEach((tool) => {
+          const uri = getToolUiResourceUri(tool);
+          if (uri) {
+            map.set(tool.name, uri);
+          }
+        });
+        setToolUiMap(map);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setToolUiError(
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      }
+    };
+
+    loadTools();
+
+    return () => controller.abort();
+  }, []);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -240,7 +281,39 @@ export function ChatBox() {
                           <Markdown content={segment.content} />
                         </div>
                       ) : (
-                        <ToolCall segment={segment} />
+                        <ToolCall segment={segment}>
+                          {(() => {
+                            const resourceUri = toolUiMap.get(
+                              segment.tool.name,
+                            );
+                            if (!resourceUri) return null;
+                            const toolInput =
+                              segment.tool.arguments &&
+                              typeof segment.tool.arguments === "object"
+                                ? (segment.tool.arguments as Record<
+                                    string,
+                                    unknown
+                                  >)
+                                : undefined;
+                            const toolResult = segment.tool.result
+                              ? segment.tool.success === undefined
+                                ? { text: segment.tool.result }
+                                : {
+                                    text: segment.tool.result,
+                                    success: segment.tool.success,
+                                  }
+                              : null;
+
+                            return (
+                              <McpUiPanel
+                                toolName={segment.tool.name}
+                                toolResourceUri={resourceUri}
+                                {...(toolInput ? { toolInput } : {})}
+                                toolResult={toolResult}
+                              />
+                            );
+                          })()}
+                        </ToolCall>
                       )}
                     </Segment>
                   ))}
@@ -295,6 +368,11 @@ export function ChatBox() {
 
           {/* RPC failure display */}
           {isFailure && <ErrorDisplay result={result} />}
+          {toolUiError && (
+            <div className="text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
+              MCP UI tools unavailable: {toolUiError}
+            </div>
+          )}
 
           {/* Scroll anchor */}
         </div>
