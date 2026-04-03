@@ -431,11 +431,11 @@ export const BarChartWidgetPayload = Schema.Struct({
   direction: Schema.Literals(["horizontal", "vertical"]).annotate({
     description:
       "Orientation of bars. Vertical defaults to x=category and y=value; horizontal swaps them.",
-  }),
+  }).pipe(Schema.optionalKey),
   layout: PlotLayoutProps.annotate({
     description:
       "Plot layout options. All fields optional; omit to use defaults.",
-  }),
+  }).pipe(Schema.optionalKey),
   marks: BarMarkProps.annotate({
     description:
       "Mark channel mapping. Use marks.x and marks.y to select data keys. If omitted, defaults are x=category and y=value for vertical bars, swapped for horizontal.",
@@ -453,11 +453,11 @@ export const LineChartWidgetPayload = Schema.Struct({
   layout: PlotLayoutProps.annotate({
     description:
       "Plot layout options. All fields optional; omit to use defaults.",
-  }),
+  }).pipe(Schema.optionalKey),
   marks: LineMarkProps.annotate({
     description:
       "Line mark channel mapping. Use marks.x and marks.y to select data keys. Defaults are x='x' and y='y' if omitted.",
-  }),
+  }).pipe(Schema.optionalKey),
 }).annotate({
   description:
     "Payload for render_line_chart_widget. LLM guidance: choose marks.x and marks.y to match keys in data objects.",
@@ -471,7 +471,7 @@ export const ScatterplotWidgetPayload = Schema.Struct({
   layout: PlotLayoutProps.annotate({
     description:
       "Plot layout options. All fields optional; omit to use defaults.",
-  }),
+  }).pipe(Schema.optionalKey),
   marks: DotMarkProps.annotate({
     description:
       "Dot mark channel mapping. Use marks.x and marks.y to select data keys. Defaults are x='x' and y='y' if omitted.",
