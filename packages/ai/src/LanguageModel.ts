@@ -7,7 +7,7 @@ const AnthropicLive = AnthropicClient.layerConfig({
 }).pipe(Layer.provide(FetchHttpClient.layer));
 
 export const SmartModelLive = AnthropicLanguageModel.layer({
-  model: "claude-sonnet-4-5",
+  model: "claude-opus-4-5",
 }).pipe(Layer.provide(AnthropicLive));
 
 export const FastModelLive = AnthropicLanguageModel.layer({

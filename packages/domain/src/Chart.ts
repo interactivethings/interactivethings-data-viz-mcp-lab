@@ -428,10 +428,12 @@ export const BarChartWidgetPayload = Schema.Struct({
     description:
       "Array of bar data objects. Each object must expose the keys used in marks.x and marks.y.",
   }),
-  direction: Schema.Literals(["horizontal", "vertical"]).annotate({
-    description:
-      "Orientation of bars. Vertical defaults to x=category and y=value; horizontal swaps them.",
-  }).pipe(Schema.optionalKey),
+  direction: Schema.Literals(["horizontal", "vertical"])
+    .annotate({
+      description:
+        "Orientation of bars. Vertical defaults to x=category and y=value; horizontal swaps them.",
+    })
+    .pipe(Schema.optionalKey),
   layout: PlotLayoutProps.annotate({
     description:
       "Plot layout options. All fields optional; omit to use defaults.",

@@ -4,7 +4,14 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { ChatResponse, MessageSegment } from "@repo/domain/Chat";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { AlertCircle, Loader2, Send } from "lucide-react";
-import { type FC, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { McpUiPanel } from "@/components/mcp-ui-panel";
 import { chatAtom } from "@/lib/atoms/chat-atom";
 import { cn } from "@/lib/utils";
@@ -36,11 +43,14 @@ type Message = {
   finishReason?: string | undefined;
 };
 
-export function ChatBox() {
-  const [result, runChat] = useAtom(chatAtom);
-  const [input, setInput] = useState("");
-  const [history, setHistory] = useState<Message[]>([]);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+const useChatRetry = (params: {
+  currentResult: ChatResponse;
+  isFailure: boolean;
+  runChat: (
+    messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
+  ) => void;
+}) => {
+  const { currentResult, isFailure, runChat } = params;
   const lastSentMessagesRef = useRef<
     Array<{
       role: "user" | "assistant" | "system";
@@ -48,33 +58,20 @@ export function ChatBox() {
     }>
   >([]);
   const readinessAttemptRef = useRef(0);
-  const lastCompletionKeyRef = useRef<string | null>(null);
-  const [toolUiMap, setToolUiMap] = useState<Map<string, string>>(new Map());
-  const [toolUiError, setToolUiError] = useState<string | null>(null);
-  const serverBaseUrl =
-    import.meta.env.VITE_SERVER_URL ?? "http://localhost:9000";
 
-  const currentResult: ChatResponse = AsyncResult.getOrElse(
-    result,
-    () => ({ _tag: "initial" }) as const,
+  const sendMessages = useCallback(
+    (
+      messages: Array<{
+        role: "user" | "assistant" | "system";
+        content: string;
+      }>,
+    ) => {
+      lastSentMessagesRef.current = messages;
+      readinessAttemptRef.current = 0;
+      runChat(messages);
+    },
+    [runChat],
   );
-
-  const currentSegments =
-    currentResult._tag === "initial" ? [] : currentResult.segments;
-
-  const isWaiting = AsyncResult.isWaiting(result);
-  const isFailure = AsyncResult.isFailure(result);
-  const isStreaming = currentResult._tag === "streaming";
-  const sendMessages = (
-    messages: Array<{
-      role: "user" | "assistant" | "system";
-      content: string;
-    }>,
-  ) => {
-    lastSentMessagesRef.current = messages;
-    readinessAttemptRef.current = 0;
-    runChat(messages);
-  };
 
   useEffect(() => {
     if (!isFailure) return;
@@ -91,6 +88,13 @@ export function ChatBox() {
 
     return () => window.clearTimeout(timeoutId);
   }, [currentResult, isFailure, runChat]);
+
+  return { sendMessages };
+};
+
+const useToolUiMap = (serverBaseUrl: string) => {
+  const [toolUiMap, setToolUiMap] = useState<Map<string, string>>(new Map());
+  const [toolUiError, setToolUiError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -124,40 +128,14 @@ export function ChatBox() {
     loadTools();
 
     return () => controller.abort();
-  }, []);
+  }, [serverBaseUrl]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg: Message = { role: "user", message: input };
-    setHistory((prev) => [...prev, userMsg]);
-    setInput("");
+  return { toolUiMap, toolUiError };
+};
 
-    const messages = historyToMessages([...history, userMsg]);
-    sendMessages(messages);
-  };
-
-  const currentIteration =
-    currentResult._tag === "streaming" ? currentResult.currentIteration : null;
-
-  const streamingMessage = useMemo<Message | null>(() => {
-    if (currentResult._tag !== "streaming") return null;
-    if (currentSegments.length === 0) return null;
-    return {
-      role: "assistant",
-      message: "",
-      segments: currentSegments,
-    };
-  }, [currentResult._tag, currentSegments]);
-
-  const displayHistory = useMemo(() => {
-    if (!streamingMessage) return history;
-    return [...history, streamingMessage];
-  }, [history, streamingMessage]);
-
-  const scrollTrigger = useMemo(
-    () => `${displayHistory.length}-${currentSegments.length}`,
-    [displayHistory.length, currentSegments.length],
-  );
+const useChatHistory = (currentResult: ChatResponse) => {
+  const [history, setHistory] = useState<Message[]>([]);
+  const lastCompletionKeyRef = useRef<string | null>(null);
 
   const completionSnapshot = useMemo(() => {
     if (currentResult._tag !== "complete") return null;
@@ -186,6 +164,53 @@ export function ChatBox() {
     ]);
   }, [completionSnapshot]);
 
+  const appendUserMessage = useCallback((message: Message) => {
+    setHistory((prev) => [...prev, message]);
+  }, []);
+
+  return { history, setHistory, appendUserMessage };
+};
+
+const useStreamingDisplay = (params: {
+  history: Message[];
+  currentResult: ChatResponse;
+  currentSegments: readonly MessageSegment[];
+}) => {
+  const { history, currentResult, currentSegments } = params;
+
+  const currentIteration =
+    currentResult._tag === "streaming" ? currentResult.currentIteration : null;
+
+  const streamingMessage = useMemo<Message | null>(() => {
+    if (currentResult._tag !== "streaming") return null;
+    if (currentSegments.length === 0) return null;
+    return {
+      role: "assistant",
+      message: "",
+      segments: currentSegments,
+    };
+  }, [currentResult._tag, currentSegments]);
+
+  const displayHistory = useMemo(() => {
+    if (!streamingMessage) return history;
+    return [...history, streamingMessage];
+  }, [history, streamingMessage]);
+
+  const scrollTrigger = useMemo(
+    () => `${displayHistory.length}-${currentSegments.length}`,
+    [displayHistory.length, currentSegments.length],
+  );
+
+  return { currentIteration, streamingMessage, displayHistory, scrollTrigger };
+};
+
+const useAutoScroll = (params: {
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  scrollTrigger: string;
+  isStreaming: boolean;
+}) => {
+  const { scrollContainerRef, scrollTrigger, isStreaming } = params;
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: scrollTrigger is stable string
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -195,6 +220,52 @@ export function ChatBox() {
       behavior: isStreaming ? "auto" : "smooth",
     });
   }, [scrollTrigger]);
+};
+
+export function ChatBox() {
+  const [result, runChat] = useAtom(chatAtom);
+  const [input, setInput] = useState("");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const serverBaseUrl =
+    import.meta.env.VITE_SERVER_URL ?? "http://localhost:9000";
+
+  const currentResult: ChatResponse = AsyncResult.getOrElse(
+    result,
+    () => ({ _tag: "initial" }) as const,
+  );
+
+  const currentSegments =
+    currentResult._tag === "initial" ? [] : currentResult.segments;
+
+  const isWaiting = AsyncResult.isWaiting(result);
+  const isFailure = AsyncResult.isFailure(result);
+  const isStreaming = currentResult._tag === "streaming";
+  const { history, appendUserMessage } = useChatHistory(currentResult);
+  const { sendMessages } = useChatRetry({ currentResult, isFailure, runChat });
+  const { toolUiMap, toolUiError } = useToolUiMap(serverBaseUrl);
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    const userMsg: Message = { role: "user", message: input };
+    appendUserMessage(userMsg);
+    setInput("");
+
+    const messages = historyToMessages([...history, userMsg]);
+    sendMessages(messages);
+  };
+
+  const { currentIteration, displayHistory, scrollTrigger } =
+    useStreamingDisplay({
+      history,
+      currentResult,
+      currentSegments,
+    });
+
+  useAutoScroll({
+    scrollContainerRef,
+    scrollTrigger,
+    isStreaming,
+  });
 
   return (
     <Card className="h-full w-full">
@@ -287,29 +358,29 @@ export function ChatBox() {
                               segment.tool.name,
                             );
                             if (!resourceUri) return null;
-                            const toolInput =
-                              segment.tool.arguments &&
-                              typeof segment.tool.arguments === "object"
-                                ? (segment.tool.arguments as Record<
-                                    string,
-                                    unknown
-                                  >)
-                                : undefined;
-                            const toolResult = segment.tool.result
-                              ? segment.tool.success === undefined
-                                ? { text: segment.tool.result }
-                                : {
-                                    text: segment.tool.result,
-                                    success: segment.tool.success,
-                                  }
-                              : null;
-
                             return (
                               <McpUiPanel
-                                toolName={segment.tool.name}
-                                toolResourceUri={resourceUri}
-                                {...(toolInput ? { toolInput } : {})}
-                                toolResult={toolResult}
+                                name={segment.tool.name}
+                                resourceUri={resourceUri}
+                                input={
+                                  segment.tool.arguments &&
+                                  typeof segment.tool.arguments === "object"
+                                    ? (segment.tool.arguments as Record<
+                                        string,
+                                        unknown
+                                      >)
+                                    : undefined
+                                }
+                                result={
+                                  segment.tool.result
+                                    ? segment.tool.success === undefined
+                                      ? { text: segment.tool.result }
+                                      : {
+                                          text: segment.tool.result,
+                                          success: segment.tool.success,
+                                        }
+                                    : null
+                                }
                               />
                             );
                           })()}
