@@ -5,6 +5,7 @@ import { McpServer, Toolkit } from "effect/unstable/ai";
 import { DevTools } from "effect/unstable/devtools";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { barChartOneShot } from "./prompt/bar-chart-one-shot";
+import { DataVisualizationResourceLayer } from "./resource/data-visualization";
 import {
   BarChartWidgetResourceLayer,
   RenderBarChartWidgetTool,
@@ -26,6 +27,7 @@ const ResourceLayer = Layer.mergeAll(
   BarChartWidgetResourceLayer,
   LineChartWidgetResourceLayer,
   ScatterplotWidgetResourceLayer,
+  DataVisualizationResourceLayer,
   // You can add more resources here
 );
 
