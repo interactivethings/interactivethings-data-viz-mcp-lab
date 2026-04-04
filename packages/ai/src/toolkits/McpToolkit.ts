@@ -23,7 +23,7 @@ export const createMcpToolkit = (options: McpToolkitOptions) =>
   Effect.gen(function* () {
     const client = yield* McpClient;
     const session = yield* client.getSession();
-    const tools = (yield* client.listAllTools()).filter(isVisibleToModel);
+    const tools = (yield* client.listTools()).filter(isVisibleToModel);
 
     yield* Effect.log(
       `MCP toolkit loaded ${tools.length} tool(s): ${tools
@@ -93,7 +93,7 @@ export const createMcpToolkit = (options: McpToolkitOptions) =>
                 );
               }
 
-              const result = yield* client.toolCall({
+              const result = yield* client.callTool({
                 name: tool.name,
                 arguments: toolArgs,
               });

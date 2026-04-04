@@ -6,6 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
+    "types": ["bun"],
     "skipLibCheck": true
   },
   "include": ["src"],

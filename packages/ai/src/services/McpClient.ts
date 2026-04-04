@@ -1,11 +1,11 @@
 import { Client } from "@modelcontextprotocol/sdk/client";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import type { ClientCapabilities } from "@modelcontextprotocol/sdk/types";
 import { Config, Data, Effect, Layer, ServiceMap } from "effect";
 import type { JsonObject } from "effect/Schema";
 import type { McpSchema } from "effect/unstable/ai";
 
-const DEFAULT_PROTOCOL_VERSION = "2024-11-05";
 const DEFAULT_CLIENT_INFO: McpSchema.Implementation = {
   name: "edu-effect-dynamic-tool-server",
   version: "0.0.1",
@@ -14,25 +14,29 @@ const DEFAULT_CLIENT_INFO: McpSchema.Implementation = {
 export type McpClientOptions = {
   readonly url: string;
   readonly headers?: Readonly<Record<string, string>>;
-  readonly protocolVersion?: string;
   readonly clientInfo?: McpSchema.Implementation;
-  readonly capabilities?: JsonObject;
+  readonly capabilities?: ClientCapabilities;
 };
 
 export type McpClientSession = {
   readonly url: string;
   readonly headers?: Readonly<Record<string, string>>;
   readonly sessionId?: string;
-  readonly protocolVersion: string;
   readonly clientInfo: McpSchema.Implementation;
   readonly serverInfo?: McpSchema.Implementation;
   readonly serverCapabilities?: JsonObject;
-  readonly capabilities: JsonObject;
+  readonly capabilities: ClientCapabilities;
   readonly instructions?: string;
 };
 
+export class McpClientInitializationError extends Data.TaggedError(
+  "McpClientInitializationError",
+)<{
+  readonly cause?: unknown;
+}> {}
+
 export class McpClientError extends Data.TaggedError("McpClientError")<{
-  readonly message: string;
+  readonly message?: string;
   readonly cause?: unknown;
 }> {}
 
@@ -59,13 +63,6 @@ export type UiResource = {
   readonly meta?: UiResourceMeta;
 };
 
-type McpInitializeResult = {
-  readonly protocolVersion?: string;
-  readonly serverInfo?: McpSchema.Implementation;
-  readonly capabilities?: JsonObject;
-  readonly instructions?: string;
-};
-
 const UiResourceMimeType = "text/html;profile=mcp-app";
 
 const McpClientConfig = Config.all({
@@ -86,17 +83,32 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 export class McpClient extends ServiceMap.Service<McpClient>()("McpClient", {
   make: (options: McpClientOptions) =>
     Effect.gen(function* () {
-      const client = new Client({
-        name: options.clientInfo?.name ?? DEFAULT_CLIENT_INFO.name,
-        version: options.clientInfo?.version ?? DEFAULT_CLIENT_INFO.version,
+      const client = yield* Effect.try({
+        try: () =>
+          new Client(
+            {
+              name: options.clientInfo?.name ?? DEFAULT_CLIENT_INFO.name,
+              version:
+                options.clientInfo?.version ?? DEFAULT_CLIENT_INFO.version,
+            },
+            options.capabilities
+              ? { capabilities: options.capabilities }
+              : undefined,
+          ),
+        catch: (cause) => new McpClientInitializationError({ cause }),
       });
 
+      const use = <A>(fn: (client: Client) => Promise<A>) =>
+        Effect.tryPromise({
+          try: () => fn(client),
+          catch: (cause) => new McpClientError({ cause }),
+        }).pipe(Effect.withSpan(`McpClient.${fn.name ?? "use"}`));
+
       const transport = new StreamableHTTPClientTransport(
-        new (
-          globalThis as typeof globalThis & {
-            URL: new (url: string) => unknown;
-          }
-        ).URL(options.url) as unknown,
+        new URL(options.url),
+        options.headers
+          ? { requestInit: { headers: options.headers } }
+          : undefined,
       );
 
       yield* Effect.acquireRelease(
@@ -111,103 +123,34 @@ export class McpClient extends ServiceMap.Service<McpClient>()("McpClient", {
         () => Effect.promise(() => client.close()),
       );
 
-      let session: McpClientSession = {
+      const serverInfo = client.getServerVersion();
+      const serverCapabilities = client.getServerCapabilities();
+      const instructions = client.getInstructions();
+
+      const session: McpClientSession = {
         url: options.url,
         ...(options.headers ? { headers: options.headers } : {}),
-        protocolVersion: options.protocolVersion ?? DEFAULT_PROTOCOL_VERSION,
         clientInfo: options.clientInfo ?? DEFAULT_CLIENT_INFO,
         capabilities: options.capabilities ?? {},
+        ...(serverInfo ? { serverInfo } : {}),
+        ...(serverCapabilities
+          ? { serverCapabilities: serverCapabilities as JsonObject }
+          : {}),
+        ...(instructions ? { instructions } : {}),
       };
 
-      const initialize = () =>
-        Effect.tryPromise({
-          try: async () => {
-            const initializer = client as unknown as {
-              initialize?: (params: {
-                protocolVersion: string;
-                clientInfo: McpSchema.Implementation;
-                capabilities: JsonObject;
-              }) => Promise<McpInitializeResult>;
-            };
-            if (typeof initializer.initialize !== "function") {
-              return undefined;
-            }
-            return await initializer.initialize({
-              protocolVersion: session.protocolVersion,
-              clientInfo: session.clientInfo,
-              capabilities: session.capabilities,
-            });
-          },
-          catch: (cause) =>
-            new McpClientError({
-              message: "Failed to initialize MCP client session",
-              cause,
-            }),
-        });
+      const listTools = () =>
+        use(async (c) => {
+          const tools: Array<typeof McpSchema.Tool.Type> = [];
+          let cursor: string | undefined;
 
-      const initializeResult = yield* initialize();
-      if (initializeResult) {
-        session = {
-          ...session,
-          protocolVersion:
-            initializeResult.protocolVersion ?? session.protocolVersion,
-          ...(initializeResult.serverInfo
-            ? { serverInfo: initializeResult.serverInfo }
-            : {}),
-          ...(initializeResult.capabilities
-            ? { serverCapabilities: initializeResult.capabilities }
-            : {}),
-          ...(initializeResult.instructions
-            ? { instructions: initializeResult.instructions }
-            : {}),
-        };
-      }
+          do {
+            const page = await c.listTools({ cursor });
+            tools.push(...(page.tools as Array<typeof McpSchema.Tool.Type>));
+            cursor = page.nextCursor ?? undefined;
+          } while (cursor);
 
-      const getSession = () => Effect.succeed(session);
-
-      const listAllTools = () =>
-        Effect.tryPromise({
-          try: async () => {
-            const tools: Array<typeof McpSchema.Tool.Type> = [];
-            let cursor: string | undefined;
-
-            do {
-              const page = await client.listTools({ cursor });
-              tools.push(...(page.tools as Array<typeof McpSchema.Tool.Type>));
-              cursor = page.nextCursor ?? undefined;
-            } while (cursor);
-
-            return tools;
-          },
-          catch: (cause) =>
-            new McpClientError({
-              message: "Failed to list MCP tools",
-              cause,
-            }),
-        });
-
-      const toolCall = (params: McpToolCallParams) =>
-        Effect.tryPromise({
-          try: async () =>
-            await client.callTool({
-              name: params.name,
-              arguments: params.arguments,
-            }),
-          catch: (cause) =>
-            new McpClientError({
-              message: "Failed to call MCP tool",
-              cause,
-            }),
-        });
-
-      const readResource = (uri: string) =>
-        Effect.tryPromise({
-          try: async () => await client.readResource({ uri }),
-          catch: (cause) =>
-            new McpClientError({
-              message: `Failed to read MCP resource ${uri}`,
-              cause,
-            }),
+          return tools;
         });
 
       const uiResourceCache = new Map<string, UiResource>();
@@ -257,23 +200,18 @@ export class McpClient extends ServiceMap.Service<McpClient>()("McpClient", {
         Effect.gen(function* () {
           const cached = uiResourceCache.get(uri);
           if (cached) return cached;
-          const response = yield* readResource(uri);
+          const response = yield* use((c) => c.readResource({ uri }));
           const resource = extractUiResource(uri, response);
           uiResourceCache.set(uri, resource);
           return resource;
         });
 
-      const getTools = () => listAllTools();
-
-      const callTool = (params: McpToolCallParams) => toolCall(params);
-
       return {
-        getSession,
-        listAllTools,
-        getTools,
-        toolCall,
-        callTool,
-        readResource,
+        use,
+        getSession: () => Effect.succeed(session),
+        listTools,
+        callTool: (params: McpToolCallParams) => use((c) => c.callTool(params)),
+        readResource: (uri: string) => use((c) => c.readResource({ uri })),
         getUiResource,
       };
     }),

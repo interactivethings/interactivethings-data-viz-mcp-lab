@@ -30,7 +30,7 @@ export const McpUiRoutes = HttpRouter.use(
     yield* router.add("GET", "/mcp-ui/tools", () =>
       Effect.gen(function* () {
         const client = yield* McpClient;
-        const tools = yield* client.getTools();
+        const tools = yield* client.listTools();
 
         const filtered = tools.filter((tool) => {
           const meta = tool._meta as
