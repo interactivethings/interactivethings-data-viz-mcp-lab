@@ -3,12 +3,14 @@ import { type RefObject, useEffect } from "react";
 type PlotRenderContext = {
   width?: number;
 };
+
 type UsePlotRendererOptions = {
   containerRef: RefObject<HTMLDivElement | null>;
   width?: number;
-  renderPlot: (context: PlotRenderContext) => HTMLElement;
+  renderPlot: (context: PlotRenderContext) => Element;
   dependencies: ReadonlyArray<unknown>;
 };
+
 export const usePlotRenderer = ({
   containerRef,
   width,

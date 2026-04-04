@@ -13,10 +13,6 @@ type WidgetStatusProps = {
   message: string;
 };
 
-
-
-
-
 export const mountWidgetApp = (element: ReactElement) => {
   const rootElement = document.getElementById("root");
 
