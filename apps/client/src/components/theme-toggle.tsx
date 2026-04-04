@@ -13,6 +13,10 @@ export const ThemeToggle = () => {
     const shouldUseDark = storedTheme ? storedTheme === "dark" : prefersDark;
 
     document.documentElement.classList.toggle("dark", shouldUseDark);
+    document.documentElement.setAttribute(
+      "data-theme",
+      shouldUseDark ? "dark" : "light",
+    );
     setIsDark(shouldUseDark);
   }, []);
 
@@ -20,6 +24,10 @@ export const ThemeToggle = () => {
     const nextIsDark = !isDark;
     setIsDark(nextIsDark);
     document.documentElement.classList.toggle("dark", nextIsDark);
+    document.documentElement.setAttribute(
+      "data-theme",
+      nextIsDark ? "dark" : "light",
+    );
     localStorage.setItem("theme", nextIsDark ? "dark" : "light");
   };
   return (

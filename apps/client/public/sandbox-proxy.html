@@ -12,8 +12,10 @@
         width: 100%;
         height: 100%;
         background: transparent;
+        overflow: hidden;
       }
       #app-frame {
+        display: block;
         width: 100%;
         height: 100%;
         border: 0;
@@ -25,7 +27,7 @@
       let appFrame = null;
 
       const defaultCsp =
-        "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'none';";
+        "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; media-src 'self' data:; connect-src 'none';";
 
       const buildCsp = (csp) => {
         if (!csp) return defaultCsp;
@@ -37,6 +39,7 @@
           "default-src 'none'",
           `script-src 'self' 'unsafe-inline'${format(csp.resourceDomains)}`,
           `style-src 'self' 'unsafe-inline'${format(csp.resourceDomains)}`,
+          `font-src 'self'${format(csp.resourceDomains)}`,
           `img-src 'self' data:${format(csp.resourceDomains)}`,
           `media-src 'self' data:${format(csp.resourceDomains)}`,
           `connect-src 'self'${format(csp.connectDomains)}`,
@@ -56,6 +59,7 @@
           "sandbox",
           sandbox || "allow-scripts allow-same-origin allow-forms",
         );
+        appFrame.setAttribute("scrolling", "no");
         if (permissions) {
           appFrame.setAttribute("allow", permissions);
         }
@@ -66,6 +70,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="${cspValue}" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      body {
+        display: block;
+      }
+    </style>
   </head>
   <body>
 ${html}
@@ -79,6 +96,11 @@ ${html}
       const isSandboxMessage = (data) =>
         typeof data?.method === "string" &&
         data.method.startsWith("ui/notifications/sandbox-");
+
+      const emitJsonRpc = (payload) => ({
+        jsonrpc: "2.0",
+        ...payload,
+      });
 
       window.addEventListener("message", (event) => {
         const data = event.data;
@@ -94,17 +116,18 @@ ${html}
           }
 
           if (!isSandboxMessage(data) && appFrame?.contentWindow) {
-            appFrame.contentWindow.postMessage(data, "*");
+            appFrame.contentWindow.postMessage(emitJsonRpc(data), "*");
           }
         }
 
         if (event.source === appFrame?.contentWindow) {
-          window.parent.postMessage(data, "*");
+          window.parent.postMessage(emitJsonRpc(data), "*");
         }
       });
 
       window.parent.postMessage(
         {
+          jsonrpc: "2.0",
           method: "ui/notifications/sandbox-proxy-ready",
           params: {},
         },
