@@ -124,6 +124,104 @@ const buildToolResult = (
 const resolveTheme = () =>
   document.documentElement.classList.contains("dark") ? "dark" : "light";
 
+const hostFontCss =
+  '@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");';
+
+const buildHostStyleVariables = () => {
+  const root = document.documentElement;
+  const style = getComputedStyle(root);
+  const getVar = (name: string, fallback: string) =>
+    style.getPropertyValue(name).trim() || fallback;
+
+  return {
+    "--color-background-primary": getVar("--background", "#0a0a0a"),
+    "--color-background-secondary": getVar("--card", "#111111"),
+    "--color-background-tertiary": getVar("--muted", "#1a1a1a"),
+    "--color-background-inverse": getVar("--foreground", "#fafafa"),
+    "--color-background-ghost": "transparent",
+    "--color-background-info": getVar("--accent", "#3b82f6"),
+    "--color-background-danger": getVar("--destructive", "#ef4444"),
+    "--color-background-success": getVar("--chart-2", "#22c55e"),
+    "--color-background-warning": getVar("--chart-4", "#f59e0b"),
+    "--color-background-disabled": getVar("--muted", "#1a1a1a"),
+    "--color-text-primary": getVar("--foreground", "#fafafa"),
+    "--color-text-secondary": getVar("--muted-foreground", "#a1a1aa"),
+    "--color-text-tertiary": getVar("--muted-foreground", "#a1a1aa"),
+    "--color-text-inverse": getVar("--background", "#0a0a0a"),
+    "--color-text-ghost": getVar("--muted-foreground", "#a1a1aa"),
+    "--color-text-info": getVar("--accent-foreground", "#0b1020"),
+    "--color-text-danger": getVar("--destructive", "#ef4444"),
+    "--color-text-success": getVar("--chart-2", "#22c55e"),
+    "--color-text-warning": getVar("--chart-4", "#f59e0b"),
+    "--color-text-disabled": getVar("--muted-foreground", "#a1a1aa"),
+    "--color-border-primary": getVar("--border", "#262626"),
+    "--color-border-secondary": getVar("--input", "#262626"),
+    "--color-border-tertiary": getVar("--border", "#262626"),
+    "--color-border-inverse": getVar("--foreground", "#fafafa"),
+    "--color-border-ghost": "transparent",
+    "--color-border-info": getVar("--accent", "#3b82f6"),
+    "--color-border-danger": getVar("--destructive", "#ef4444"),
+    "--color-border-success": getVar("--chart-2", "#22c55e"),
+    "--color-border-warning": getVar("--chart-4", "#f59e0b"),
+    "--color-border-disabled": getVar("--border", "#262626"),
+    "--color-ring-primary": getVar("--ring", "#3b82f6"),
+    "--color-ring-secondary": getVar("--ring", "#3b82f6"),
+    "--color-ring-inverse": getVar("--background", "#0a0a0a"),
+    "--color-ring-info": getVar("--accent", "#3b82f6"),
+    "--color-ring-danger": getVar("--destructive", "#ef4444"),
+    "--color-ring-success": getVar("--chart-2", "#22c55e"),
+    "--color-ring-warning": getVar("--chart-4", "#f59e0b"),
+    "--font-sans": getVar(
+      "--font-mono",
+      "JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    ),
+    "--font-mono": getVar(
+      "--font-mono",
+      "JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    ),
+    "--font-weight-normal": "400",
+    "--font-weight-medium": "500",
+    "--font-weight-semibold": "600",
+    "--font-weight-bold": "700",
+    "--font-text-xs-size": "0.75rem",
+    "--font-text-sm-size": "0.875rem",
+    "--font-text-md-size": "1rem",
+    "--font-text-lg-size": "1.125rem",
+    "--font-heading-xs-size": "0.75rem",
+    "--font-heading-sm-size": "0.875rem",
+    "--font-heading-md-size": "1rem",
+    "--font-heading-lg-size": "1.25rem",
+    "--font-heading-xl-size": "1.5rem",
+    "--font-heading-2xl-size": "1.875rem",
+    "--font-heading-3xl-size": "2.25rem",
+    "--font-text-xs-line-height": "1.4",
+    "--font-text-sm-line-height": "1.4",
+    "--font-text-md-line-height": "1.5",
+    "--font-text-lg-line-height": "1.5",
+    "--font-heading-xs-line-height": "1.4",
+    "--font-heading-sm-line-height": "1.4",
+    "--font-heading-md-line-height": "1.4",
+    "--font-heading-lg-line-height": "1.3",
+    "--font-heading-xl-line-height": "1.25",
+    "--font-heading-2xl-line-height": "1.2",
+    "--font-heading-3xl-line-height": "1.1",
+    "--border-radius-xs": getVar("--radius-sm", "4px"),
+    "--border-radius-sm": getVar("--radius-sm", "4px"),
+    "--border-radius-md": getVar("--radius-md", "6px"),
+    "--border-radius-lg": getVar("--radius-lg", "8px"),
+    "--border-radius-xl": getVar("--radius-xl", "12px"),
+    "--border-radius-full": "9999px",
+    "--border-width-regular": "1px",
+    "--shadow-hairline": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    "--shadow-sm":
+      "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+    "--shadow-md":
+      "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    "--shadow-lg":
+      "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+  } as const;
+};
+
 export function McpUiPanel({
   toolName,
   toolResourceUri,
@@ -179,6 +277,12 @@ export function McpUiPanel({
           theme: resolveTheme(),
           platform: "web",
           containerDimensions: { width: 900, height: 500 },
+          styles: {
+            variables: buildHostStyleVariables(),
+            css: {
+              fonts: hostFontCss,
+            },
+          },
         },
       },
     );
@@ -203,7 +307,15 @@ export function McpUiPanel({
     };
 
     const onThemeChange = new MutationObserver(() => {
-      bridge.setHostContext({ theme: resolveTheme() });
+      bridge.setHostContext({
+        theme: resolveTheme(),
+        styles: {
+          variables: buildHostStyleVariables(),
+          css: {
+            fonts: hostFontCss,
+          },
+        },
+      });
     });
     onThemeChange.observe(document.documentElement, {
       attributes: true,
@@ -211,9 +323,15 @@ export function McpUiPanel({
     });
 
     const sendSandboxResource = () => {
+      const existing = resourceState.csp ?? {};
+      const resourceDomains = [
+        ...(existing.resourceDomains ?? []),
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+      ];
       const payload = {
         html: resourceState.html,
-        ...(resourceState.csp ? { csp: resourceState.csp } : {}),
+        csp: { ...existing, resourceDomains },
         ...(resourceState.permissions
           ? { permissions: resourceState.permissions }
           : {}),
@@ -251,7 +369,7 @@ export function McpUiPanel({
       bridgeRef.current = null;
       void bridge.teardownResource({}).catch(() => undefined);
     };
-  }, [resourceState, toolName, toolResourceUri, toolInput]);
+  }, [resourceState, toolInput]);
 
   useEffect(() => {
     const bridge = bridgeRef.current;
@@ -275,11 +393,7 @@ export function McpUiPanel({
 
   return (
     <div
-      className={cn(
-        "mt-2 w-full border border-border bg-muted/30",
-        resourceState?.prefersBorder === false && "border-transparent",
-        className,
-      )}
+      className={cn("mt-2 w-full bg-muted/30", className)}
       style={frameHeight ? { height: frameHeight } : undefined}
     >
       <iframe
