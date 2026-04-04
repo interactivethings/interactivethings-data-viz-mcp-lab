@@ -34,6 +34,9 @@ export class ChatService extends ServiceMap.Service<ChatServiceApi>()(
               |You have access to tools and should use them when appropriate.
               |Be concise and direct in your responses.
               |
+              |Before using any render_*_widget tool, first call list_resources to see available guidance.
+              |If a data visualization resource exists (e.g., app://data-visualization), read it with read_resource and follow its guidance.
+              |
               |For MCP chart tools (render_*_widget), pass arguments as JSON in a string field named "payload".
               |Example: { "payload": "{"data":[{"x":1,"y":2}],"marks":{"x":"x","y":"y"}}" }
             `);

@@ -45,6 +45,13 @@ export type McpToolCallParams = {
   readonly arguments?: Readonly<Record<string, unknown>>;
 };
 
+export type McpResource = {
+  readonly uri: string;
+  readonly name: string;
+  readonly description?: string;
+  readonly mimeType?: string;
+};
+
 export type UiResourceMeta = {
   readonly csp?: {
     resourceDomains?: string[];
@@ -153,6 +160,20 @@ export class McpClient extends ServiceMap.Service<McpClient>()("McpClient", {
           return tools;
         });
 
+      const listResources = () =>
+        use(async (c) => {
+          const resources: Array<McpResource> = [];
+          let cursor: string | undefined;
+
+          do {
+            const page = await c.listResources({ cursor });
+            resources.push(...(page.resources as Array<McpResource>));
+            cursor = page.nextCursor ?? undefined;
+          } while (cursor);
+
+          return resources;
+        });
+
       const uiResourceCache = new Map<string, UiResource>();
 
       const extractUiResource = (
@@ -210,6 +231,7 @@ export class McpClient extends ServiceMap.Service<McpClient>()("McpClient", {
         use,
         getSession: () => Effect.succeed(session),
         listTools,
+        listResources,
         callTool: (params: McpToolCallParams) => use((c) => c.callTool(params)),
         readResource: (uri: string) => use((c) => c.readResource({ uri })),
         getUiResource,
