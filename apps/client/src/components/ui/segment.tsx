@@ -1,7 +1,14 @@
 import type { ChatResponse, MessageSegment } from "@repo/domain/Chat";
-import { AlertCircle, CheckCircle, Loader2, Wrench } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  MessageSquareMore,
+  Wrench,
+} from "lucide-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../../lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 export function ToolCall({
   segment,
@@ -10,6 +17,36 @@ export function ToolCall({
   segment: MessageSegment & { _tag: "tool-call" };
   children?: ReactNode;
 }) {
+  const normalizePayloadField = (value: unknown) => {
+    if (!value || typeof value !== "object") return value;
+    if (!("payload" in value)) return value;
+    const payload = (value as { payload?: unknown }).payload;
+    if (typeof payload !== "string") return value;
+    try {
+      return { ...value, payload: JSON.parse(payload) };
+    } catch {
+      return value;
+    }
+  };
+
+  const formatJsonValue = (value: unknown) => {
+    if (value === undefined) return "{}";
+    try {
+      if (typeof value === "string") {
+        const parsed = JSON.parse(value) as unknown;
+        return JSON.stringify(normalizePayloadField(parsed), null, 2);
+      }
+      return JSON.stringify(normalizePayloadField(value), null, 2);
+    } catch {
+      return JSON.stringify({ text: String(value) }, null, 2);
+    }
+  };
+  const toolArguments =
+    segment.tool.argumentsText?.length > 0
+      ? segment.tool.argumentsText
+      : segment.tool.arguments
+        ? JSON.stringify(segment.tool.arguments)
+        : undefined;
   const statusStyles = {
     executing: {
       icon: "text-muted-foreground",
@@ -66,6 +103,35 @@ export function ToolCall({
               : segment.tool.result}
           </span>
         )}
+        {(segment.tool.status === "complete" && segment.tool.result) ||
+        (segment.tool.status === "failed" && toolArguments) ? (
+          <div className="ml-auto flex items-center gap-2">
+            {segment.tool.status === "complete" && segment.tool.result && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <MessageSquareMore className="text-muted-foreground size-5" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <pre className="font-mono text-xs">
+                    {formatJsonValue(segment.tool.result)}
+                  </pre>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {segment.tool.status === "failed" && toolArguments && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <MessageSquareMore className="text-destructive size-5" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <pre className="font-mono text-xs">
+                    {formatJsonValue(toolArguments)}
+                  </pre>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        ) : null}
       </div>
       {children}
     </div>

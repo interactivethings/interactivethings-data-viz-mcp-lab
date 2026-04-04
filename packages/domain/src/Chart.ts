@@ -431,7 +431,7 @@ export const BarChartWidgetPayload = Schema.Struct({
   direction: Schema.Literals(["horizontal", "vertical"])
     .annotate({
       description:
-        "Orientation of bars. Vertical defaults to x=category and y=value; horizontal swaps them.",
+        "Orientation of bars. Vertical means x=category and y=value; horizontal means x=value and y=category.",
     })
     .pipe(Schema.optionalKey),
   layout: PlotLayoutProps.annotate({
@@ -440,11 +440,29 @@ export const BarChartWidgetPayload = Schema.Struct({
   }).pipe(Schema.optionalKey),
   marks: BarMarkProps.annotate({
     description:
-      "Mark channel mapping. Use marks.x and marks.y to select data keys. If omitted, defaults are x=category and y=value for vertical bars, swapped for horizontal.",
+      "Mark channel mapping. Use marks.x and marks.y to select data keys that match your data objects. For vertical bars, set x=category and y=value. For horizontal bars, set x=value and y=category.",
   }),
 }).annotate({
   description:
-    "Payload for render_bar_chart_widget. LLM guidance: choose marks.x and marks.y to match keys in data objects.",
+    "Payload for render_bar_chart_widget. Align marks.x/marks.y with the data keys for the chosen orientation.",
+  examples: [
+    {
+      data: [
+        { category: "Q1", value: 120 },
+        { category: "Q2", value: 98 },
+      ],
+      direction: "vertical",
+      marks: { x: "category", y: "value" },
+    },
+    {
+      data: [
+        { breed: "Golden Retriever", popularity: 9 },
+        { breed: "Labrador Retriever", popularity: 8.5 },
+      ],
+      direction: "horizontal",
+      marks: { x: "popularity", y: "breed" },
+    },
+  ],
 });
 
 export const LineChartWidgetPayload = Schema.Struct({

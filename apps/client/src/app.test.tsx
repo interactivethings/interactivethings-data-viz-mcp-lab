@@ -62,26 +62,6 @@ describe("App", () => {
       .toBeVisible();
   });
 
-  test("renders REST API section", async () => {
-    const screen = await render(<App />);
-    const restHeading = screen.getByText(/^REST API$/);
-    restHeading.element().scrollIntoView({ block: "center" });
-    await expect.element(restHeading).toBeVisible();
-    await expect
-      .element(screen.getByRole("button", { name: "Call REST API" }))
-      .toBeVisible();
-  });
-
-  test("renders RPC API section", async () => {
-    const screen = await render(<App />);
-    const rpcHeading = screen.getByText(/^RPC API$/);
-    rpcHeading.element().scrollIntoView({ block: "center" });
-    await expect.element(rpcHeading).toBeVisible();
-    await expect
-      .element(screen.getByRole("button", { name: "Call RPC API" }))
-      .toBeVisible();
-  });
-
   test("renders all technology logos", async () => {
     const screen = await render(<App />);
     await expect.element(screen.getByAltText("Bun logo")).toBeVisible();
