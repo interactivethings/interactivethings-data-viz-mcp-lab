@@ -13,7 +13,9 @@ export const barChartOneShot = McpServer.prompt({
         |## Create a bar chart using render_bar_chart_widget.  
         |- Build data as an array of objects.  
         |- Choose direction ("vertical" or "horizontal").  
-        |- Map marks.x and marks.y to the exact field names in your data.  
+        |- Map marks.x and marks.y to the exact field names in your data, based on direction.  
+        |  - Vertical: x=category, y=value.
+        |  - Horizontal: x=value, y=category.
         |- Use layout for sizing, margins, title/subtitle/caption, and grid.  
         |- If you need groups/series, use marks.fill (or marks.z) with a series field.
         |
