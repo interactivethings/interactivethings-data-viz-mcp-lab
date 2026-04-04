@@ -4,9 +4,6 @@ import react from "./assets/react.svg";
 import vite from "./assets/vite.svg";
 import { ChatBox } from "./components/chat-box";
 import { GithubIcon } from "./components/icon/Github";
-import { PresencePanel } from "./components/presence-panel";
-import { RestCard } from "./components/rest-card";
-import { RpcCard } from "./components/rpc-card";
 import { ThemeToggle } from "./components/theme-toggle";
 import { Button } from "./components/ui/button";
 
