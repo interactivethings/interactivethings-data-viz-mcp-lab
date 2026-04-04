@@ -1,168 +1,372 @@
-# Data Visualization Practices for Widgets
+# Data Visualization Selection Guide
 
-Practical guidance for choosing chart types and structuring payloads for the
-widget tools: render_bar_chart_widget, render_line_chart_widget, and
-render_scatterplot_widget.
+Use this guide to choose the right widget for a user's data and question.
 
-## Chart Selection Guide (Widget-Mapped)
+Pick the simplest chart that answers the user's question well. Prefer charts
+with accurate comparison over charts that look more dramatic.
 
-| What You Are Showing         | Best Widget                                          | Alternatives                   |
-| ---------------------------- | ---------------------------------------------------- | ------------------------------ |
-| Trend over time              | Line chart widget                                    | Stacked area (not implemented) |
-| Comparison across categories | Bar chart widget                                     | Lollipop (not implemented)     |
-| Ranking                      | Bar chart widget (horizontal)                        | Dot plot (not implemented)     |
-| Part-to-whole composition    | Bar chart widget with marks.fill (stacked)           | Treemap (not implemented)      |
-| Composition over time        | Line chart widget (multiple series)                  | Stacked area (not implemented) |
-| Distribution                 | Histogram (not implemented)                          | Box plot (not implemented)     |
-| Correlation (2 variables)    | Scatterplot widget                                   | Bubble chart (not implemented) |
-| Correlation (many variables) | Heatmap (not implemented)                            | Pair plot (not implemented)    |
-| Geographic patterns          | Map (not implemented)                                | Bubble map (not implemented)   |
-| Flow / process               | Sankey (not implemented)                             | Funnel (not implemented)       |
-| Relationship network         | Network graph (not implemented)                      | Chord (not implemented)        |
-| Performance vs. target       | Bullet chart (not implemented)                       | Gauge (not implemented)        |
-| Multiple KPIs at once        | Small multiples (not implemented as a single widget) | Dashboard of separate widgets  |
+This guide only covers widgets that exist in this server:
 
-## When NOT to Use Certain Charts
+- `render_line_chart_widget`
+- `render_area_chart_widget`
+- `render_bar_chart_widget`
+- `render_histogram_widget`
+- `render_box_plot_widget`
+- `render_scatterplot_widget`
+- `render_heatmap_widget`
+- `render_treemap_widget`
+- `render_geo_chart_widget`
+- `render_bullet_chart_widget`
 
-- Pie/Donut: avoid unless <6 categories and only rough proportions matter.
-  (Pie/Donut not implemented.)
-- 3D charts: never. They distort perception. (Not implemented.)
-- Dual-axis: avoid unless clearly labeled; can mislead.
-- Stacked bars with many categories: hard to compare middle segments.
+## How To Choose
 
-## Widget Payload Patterns
+Start from the user's analytic goal, not from a favorite chart type.
 
-### Interactivity (Tooltips)
+1. If the user wants to show change over an ordered dimension, prefer a line chart.
+2. If the user wants to compare categories, prefer a bar chart.
+3. If the user wants to show a distribution, choose histogram or box plot.
+4. If the user wants to show relationship between two quantitative variables, choose scatterplot.
+5. If the user wants to show a matrix of values across two categorical axes, choose heatmap.
+6. If the user wants part-to-whole and there is only one flat level of categories, consider treemap.
+7. If the user wants value versus target, choose bullet chart.
+8. If geography is essential to the message, choose geo chart.
 
-Enable tooltips by setting `marks.tip` to `true` in the widget payload. The
-tooltip will include all fields from the underlying data row.
+If two charts could work, prefer the one that supports more accurate reading.
 
-```json
-{
-  "data": [
-    { "category": "Q1", "value": 120, "region": "EU" }
-  ],
-  "direction": "vertical",
-  "marks": { "x": "category", "y": "value", "tip": true }
-}
-```
+## Quick Selection Table
 
-### Line Chart (Time Series)
+| User intent                                     | Best widget  | Use when                                                                | Prefer instead of                                            |
+| ----------------------------------------------- | ------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Trend over time or another ordered axis         | Line chart   | The main message is direction, slope, or comparison over sequence       | Area chart when filled magnitude is not important            |
+| Magnitude over time or composition over time    | Area chart   | Filled area helps communicate accumulated volume or stacked composition | Line chart when only the topline matters                     |
+| Compare or rank categories                      | Bar chart    | Users need precise comparison across categories                         | Treemap when exact comparison matters                        |
+| Distribution of one variable                    | Histogram    | You have raw observations and want to show frequency by bin             | Box plot when comparing grouped distributions                |
+| Distribution across groups                      | Box plot     | You want quartiles, median, spread, and outliers by category            | Histogram when shape of one distribution is the main message |
+| Relationship between two quantitative variables | Scatterplot  | You want correlation, clustering, or outliers                           | Heatmap when the data is already a matrix                    |
+| Matrix comparison                               | Heatmap      | Each row already represents one cell value across x and y categories    | Scatterplot for raw point clouds                             |
+| Flat part-to-whole composition                  | Treemap      | You have one level of categories and area comparison is acceptable      | Bar chart for more precise comparison                        |
+| Geographic point or country pattern             | Geo chart    | Location itself matters to the story                                    | Bar chart when geography is incidental                       |
+| Actual value versus target                      | Bullet chart | You need to compare one or more values against explicit targets         | Bar chart when there is no target                            |
 
-Use for trends. For dates, prefer Date objects or epoch milliseconds and set
-layout.x.type to "utc" with calendar ticks.
+## Decision Rules
 
-```json
-{
-  "data": [
-    { "date": "2024-01-01", "value": 120, "series": "Alpha" },
-    { "date": "2024-02-01", "value": 98, "series": "Alpha" },
-    { "date": "2024-01-01", "value": 80, "series": "Beta" },
-    { "date": "2024-02-01", "value": 110, "series": "Beta" }
-  ],
-  "layout": {
-    "title": "Metric trend",
-    "subtitle": "By series",
-    "caption": "Source: Internal",
-    "grid": true,
-    "x": { "type": "utc", "ticks": "month", "tickFormat": "%b" },
-    "y": { "label": "Value" }
-  },
-  "marks": {
-    "x": "date",
-    "y": "value",
-    "z": "series",
-    "tip": true
-  }
-}
-```
+### Line Chart
 
-### Bar Chart (Comparison or Ranking)
+Choose line charts for trends across time or another naturally ordered axis.
 
-Use direction "horizontal" when labels are long. Keep bars starting at zero.
+Good fit:
 
-```json
-{
-  "data": [
-    { "category": "Q1", "value": 120 },
-    { "category": "Q2", "value": 98 },
-    { "category": "Q3", "value": 140 },
-    { "category": "Q4", "value": 110 }
-  ],
-  "direction": "vertical",
-  "layout": {
-    "title": "Quarterly sales",
-    "grid": true,
-    "y": { "label": "Sales" }
-  },
-  "marks": { "x": "category", "y": "value", "tip": true }
-}
-```
+- month-by-month, day-by-day, year-over-year, or step-by-step change
+- one or a few series with a shared ordered x-axis
+- questions about rise, fall, crossover, or volatility
 
-Stacked bars (part-to-whole): set marks.fill (or marks.z) to a series key.
+Prefer line over area when:
 
-```json
-{
-  "data": [
-    { "quarter": "Q1", "region": "EU", "value": 40 },
-    { "quarter": "Q1", "region": "NA", "value": 80 },
-    { "quarter": "Q2", "region": "EU", "value": 30 },
-    { "quarter": "Q2", "region": "NA", "value": 68 }
-  ],
-  "direction": "vertical",
-  "marks": { "x": "quarter", "y": "value", "fill": "region", "tip": true }
-}
-```
+- the exact path matters more than accumulated magnitude
+- several series need to be compared clearly
 
-### Scatterplot (Correlation)
+Avoid line when:
 
-Use for two quantitative variables. Add size or color via marks.r or marks.fill.
+- x is just a set of unrelated categories
+- the user is comparing totals across categories rather than change
 
-```json
-{
-  "data": [
-    { "x": 10, "y": 22, "group": "A" },
-    { "x": 15, "y": 18, "group": "B" }
-  ],
-  "layout": {
-    "title": "Correlation",
-    "x": { "label": "Metric A" },
-    "y": { "label": "Metric B" }
-  },
-  "marks": { "x": "x", "y": "y", "fill": "group", "tip": true }
-}
-```
+### Area Chart
 
-## Layout and Scale Guidance
+Choose area charts when filled magnitude adds meaning.
 
-- Time series: set layout.x.type to "utc" (recommended) or "time".
-- Bar charts: keep y-axis starting at zero to avoid exaggeration.
-- Use layout.x.ticks or layout.x.interval for readable date ticks.
-- Use layout.title/subtitle/caption to state the insight and context.
-- Use layout.grid sparingly; let data be the focus.
+Good fit:
 
-## Design Principles
+- traffic volume over time
+- totals over time where the area communicates amount
+- stacked composition over time with a small number of series
 
-- Color encodes data, not decoration. Use a single accent to highlight.
+Prefer area over line when:
+
+- the user cares about volume as well as direction
+- stacked composition over time is the main message
+
+Avoid area when:
+
+- many series would overlap or stack into an unreadable chart
+- exact comparison between middle stacked series matters
+
+### Bar Chart
+
+Choose bar charts for category comparison and ranking.
+
+Good fit:
+
+- comparing products, teams, regions, or time periods as discrete buckets
+- ranking top or bottom performers
+- comparing totals across categories
+
+Use horizontal bars when:
+
+- labels are long
+- ranking is the main message
+
+Use stacked bars when:
+
+- the user wants part-to-whole within each category
+- there are only a few series
+
+Avoid bar when:
+
+- the x-axis is continuous time and the story is trend
+- there are too many stacked segments for reliable comparison
+
+### Histogram
+
+Choose histograms for the distribution of one quantitative or temporal variable.
+
+Good fit:
+
+- spread of salaries, ages, response times, or weights
+- questions about skew, clusters, gaps, or rough shape
+- raw observations that still need binning
+
+Prefer histogram over box plot when:
+
+- the shape of the distribution matters
+- there is only one main variable to summarize
+
+Avoid histogram when:
+
+- the data is already summarized into quartiles
+- the user mainly needs grouped comparison of medians and spread
+
+### Box Plot
+
+Choose box plots for comparing distributions across categories.
+
+Good fit:
+
+- score distribution by team
+- response time distribution by service
+- salary distribution by department
+
+Prefer box plot over histogram when:
+
+- there are several groups to compare side by side
+- quartiles, median, spread, and outliers are the main message
+
+Avoid box plot when:
+
+- the user needs the full shape of the distribution
+- there is no categorical grouping dimension
+
+Important:
+
+- box plots should be built from raw observations, not precomputed quartiles
+
+### Scatterplot
+
+Choose scatterplots for relationships between two quantitative variables.
+
+Good fit:
+
+- revenue versus margin
+- horsepower versus fuel economy
+- latency versus throughput
+- cluster, correlation, and outlier analysis
+
+This widget also works for bubble-style charts when size adds a third variable.
+
+Prefer scatterplot over heatmap when:
+
+- the data consists of individual observations, not precomputed matrix cells
+
+Avoid scatterplot when:
+
+- both axes are categorical
+- there are so many points that overplotting hides the pattern and a different summary is needed
+
+### Heatmap
+
+Choose heatmaps for a matrix of values across two categorical axes.
+
+Good fit:
+
+- month by region sales
+- weekday by hour activity
+- team by metric scorecards
+
+Use heatmap when:
+
+- each row already represents one cell value
+- color is the main comparison channel
+
+Prefer heatmap over scatterplot when:
+
+- the data is already aggregated into a grid or matrix
+
+Avoid heatmap when:
+
+- the user needs precise positional reading more than matrix scanning
+- the matrix is so large that labels and color differences become unreadable
+
+### Treemap
+
+Choose treemaps for flat part-to-whole composition.
+
+Good fit:
+
+- portfolio composition
+- category contribution to a whole
+- share of total across a modest number of categories
+
+Use treemap only when:
+
+- there is a single flat level of categories
+- area comparison is acceptable
+
+Prefer bar chart over treemap when:
+
+- precise comparison matters more than compact part-to-whole presentation
+- ranking is part of the message
+
+Avoid treemap when:
+
+- the data is hierarchical across multiple parent-child levels
+- there are too many tiny categories to label or compare
+
+### Geo Chart
+
+Choose geo charts only when geography is essential.
+
+Good fit:
+
+- city locations with magnitude encoded as point size
+- country-level choropleths
+- any story where position on a map is meaningful
+
+This widget supports:
+
+- projected point maps
+- country choropleths
+- simple basemap layers such as sphere, land, and graticule
+
+Prefer geo chart over bar chart only when:
+
+- the user needs to reason about spatial location, regional clustering, or map context
+
+Avoid geo chart when:
+
+- geography is just decoration
+- a ranked bar chart would make the comparison clearer
+
+Important:
+
+- choropleths are for country-level joins in this widget, not arbitrary custom polygons
+
+### Bullet Chart
+
+Choose bullet charts for value-versus-target comparison.
+
+Good fit:
+
+- actual versus target revenue by product line
+- KPI versus goal by team
+- one or more categories where each row has a current value and a target
+
+Prefer bullet chart over bar chart when:
+
+- the target is central to the question
+- the user wants to compare actual performance against a benchmark
+
+Avoid bullet chart when:
+
+- there is no explicit target
+- the user wants a single dashboard-style gauge display rather than precise comparison
+
+## Common Ambiguities
+
+### Line vs Area
+
+Choose line when the message is trend.
+
+Choose area when the message is trend plus magnitude, or composition over time.
+
+### Bar vs Treemap
+
+Choose bar when the user needs precise comparison or ranking.
+
+Choose treemap when the user wants compact flat part-to-whole composition and can tolerate area-based comparison.
+
+### Histogram vs Box Plot
+
+Choose histogram for one variable's distribution shape.
+
+Choose box plot for grouped distribution comparison.
+
+### Heatmap vs Scatterplot
+
+Choose heatmap for precomputed matrix cells.
+
+Choose scatterplot for raw observations positioned by two quantitative variables.
+
+### Bullet vs Bar
+
+Choose bullet when target comparison is part of the question.
+
+Choose bar when the user only wants category comparison.
+
+### Geo vs Non-Geo Charts
+
+Choose geo only when the map itself adds meaning.
+
+If the user is really comparing categories such as countries or regions by value,
+and spatial position is not the point, prefer bar.
+
+## Good Practices
+
+- Prefer the most readable chart, not the most decorative one.
+- Use direct comparison charts when users need exact judgment.
+- Keep category counts manageable.
 - Sort categories by value unless a natural order exists.
-- Keep labels short; switch to horizontal bars for long labels.
-- Use direct labels for key points rather than cluttering everything.
-- Maintain consistent scales across related charts.
+- Use horizontal bars for long labels.
+- Use line or area only when the x-axis is meaningfully ordered.
+- Use heatmaps and treemaps only when color or area comparison is acceptable.
+- Use geo charts only when location matters.
+- Use bullet charts when a target or benchmark is explicit.
 
-## Accessibility
+## Bad Practices
 
-- Do not rely on color alone. Use direct labels or symbols.
-- Ensure text is legible (>= 10pt labels, >= 12pt titles).
-- Provide a caption and data context for screen readers.
+- Do not choose pie or donut charts by default.
+- Do not choose 3D charts.
+- Do not choose dual-axis charts unless the user explicitly asks and the labeling can be made very clear.
+- Do not choose a treemap when a bar chart would answer the question more accurately.
+- Do not choose a geo chart just because the data contains place names.
+- Do not choose a box plot from pre-aggregated quartiles; it expects raw observations.
+- Do not choose a histogram from pre-binned counts; it expects raw observations.
 
-## Not Implemented (Widget Gaps)
+## Unsupported Chart Families
 
-- Area, stacked area
-- Histogram, box plot, violin plot
-- Heatmap, treemap
-- Choropleth or any map-based chart
-- Sankey, funnel
-- Network graph, chord diagram
-- Bullet, gauge
-- Pie, donut
-- Small multiples as a single widget (use multiple widgets instead)
+These are not available as widgets here, so choose a supported alternative instead.
+
+- Pie and donut: usually replace with bar or treemap
+- Gauge: usually replace with bullet chart
+- Funnel: usually replace with bar chart if the stages are simple
+- Network graph: usually replace with bar, scatterplot, or heatmap depending on the question
+- Sankey: not available
+- Chord diagram: not available
+- Violin plot: not available
+- Small multiples as one widget: use separate widgets instead
+
+## LLM Guidance
+
+When the human request is vague, infer the chart from the question they are asking.
+
+Examples of intent mapping:
+
+- "How has this changed over time?" -> line chart
+- "Which category is biggest or smallest?" -> bar chart
+- "What does the distribution look like?" -> histogram
+- "How do these groups differ in spread?" -> box plot
+- "Are these two measures related?" -> scatterplot
+- "Show this matrix of scores" -> heatmap
+- "How do these parts contribute to the whole?" -> treemap
+- "Where are these values located geographically?" -> geo chart
+- "How far are we from target?" -> bullet chart
+
+If the request is still ambiguous after that, ask one short clarifying question.

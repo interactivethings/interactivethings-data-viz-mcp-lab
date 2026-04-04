@@ -7,10 +7,41 @@ import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { barChartOneShot } from "./prompt/bar-chart-one-shot";
 import { DataVisualizationResourceLayer } from "./resource/data-visualization";
 import {
+  AreaChartWidgetResourceLayer,
+  RenderAreaChartWidgetTool,
+  renderAreaChartWidgetHandler,
+} from "./widget/area-chart/area-chart";
+import {
   BarChartWidgetResourceLayer,
   RenderBarChartWidgetTool,
   renderBarChartWidgetHandler,
 } from "./widget/bar-chart/bar-chart";
+import {
+  BoxPlotWidgetResourceLayer,
+  RenderBoxPlotWidgetTool,
+  renderBoxPlotWidgetHandler,
+} from "./widget/box-plot/box-plot";
+import {
+  BulletChartWidgetResourceLayer,
+  RenderBulletChartWidgetTool,
+  renderBulletChartWidgetHandler,
+} from "./widget/bullet-chart/bullet-chart";
+
+import {
+  GeoChartWidgetResourceLayer,
+  RenderGeoChartWidgetTool,
+  renderGeoChartWidgetHandler,
+} from "./widget/geo-chart/geo-chart";
+import {
+  HeatmapWidgetResourceLayer,
+  RenderHeatmapWidgetTool,
+  renderHeatmapWidgetHandler,
+} from "./widget/heatmap/heatmap";
+import {
+  HistogramWidgetResourceLayer,
+  RenderHistogramWidgetTool,
+  renderHistogramWidgetHandler,
+} from "./widget/histogram/histogram";
 import {
   LineChartWidgetResourceLayer,
   RenderLineChartWidgetTool,
@@ -21,12 +52,24 @@ import {
   renderScatterplotWidgetHandler,
   ScatterplotWidgetResourceLayer,
 } from "./widget/scatterplot/scatterplot";
+import {
+  RenderTreemapWidgetTool,
+  renderTreemapWidgetHandler,
+  TreemapWidgetResourceLayer,
+} from "./widget/treemap/treemap";
 
 // Define Resources
 const ResourceLayer = Layer.mergeAll(
+  AreaChartWidgetResourceLayer,
   BarChartWidgetResourceLayer,
+  BoxPlotWidgetResourceLayer,
+  BulletChartWidgetResourceLayer,
+  GeoChartWidgetResourceLayer,
+  HeatmapWidgetResourceLayer,
+  HistogramWidgetResourceLayer,
   LineChartWidgetResourceLayer,
   ScatterplotWidgetResourceLayer,
+  TreemapWidgetResourceLayer,
   DataVisualizationResourceLayer,
   // You can add more resources here
 );
@@ -39,18 +82,32 @@ const PromptLayer = Layer.mergeAll(
 
 // Define Toolkit
 class AiTools extends Toolkit.make(
+  RenderAreaChartWidgetTool,
   RenderBarChartWidgetTool,
+  RenderBoxPlotWidgetTool,
+  RenderBulletChartWidgetTool,
+  RenderGeoChartWidgetTool,
+  RenderHeatmapWidgetTool,
+  RenderHistogramWidgetTool,
   RenderLineChartWidgetTool,
   RenderScatterplotWidgetTool,
+  RenderTreemapWidgetTool,
   // You can add more tools here
 ) {}
 
 const ToolLayer = McpServer.toolkit(AiTools).pipe(
   Layer.provide(
     AiTools.toLayer({
+      render_area_chart_widget: renderAreaChartWidgetHandler,
       render_bar_chart_widget: renderBarChartWidgetHandler,
+      render_box_plot_widget: renderBoxPlotWidgetHandler,
+      render_bullet_chart_widget: renderBulletChartWidgetHandler,
+      render_geo_chart_widget: renderGeoChartWidgetHandler,
+      render_heatmap_widget: renderHeatmapWidgetHandler,
+      render_histogram_widget: renderHistogramWidgetHandler,
       render_line_chart_widget: renderLineChartWidgetHandler,
       render_scatterplot_widget: renderScatterplotWidgetHandler,
+      render_treemap_widget: renderTreemapWidgetHandler,
       // add implementation for more tools here
     }),
   ),

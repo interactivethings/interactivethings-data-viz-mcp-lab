@@ -9,9 +9,16 @@
     },
     "server-mcp#build": {
       "dependsOn": [
+        "@repo/widget-area-chart#build",
         "@repo/widget-bar-chart#build",
+        "@repo/widget-box-plot#build",
+        "@repo/widget-bullet-chart#build",
+        "@repo/widget-geo-chart#build",
+        "@repo/widget-heatmap#build",
+        "@repo/widget-histogram#build",
         "@repo/widget-line-chart#build",
-        "@repo/widget-scatterplot#build"
+        "@repo/widget-scatterplot#build",
+        "@repo/widget-treemap#build"
       ]
     },
     "dev": {
