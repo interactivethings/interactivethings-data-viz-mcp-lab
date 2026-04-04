@@ -24,6 +24,7 @@
   "devDependencies": {
     "@repo/config-typescript": "workspace:*",
     "@repo/domain": "workspace:*",
+    "@repo/ui": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
