@@ -24,16 +24,20 @@ const AreaChart = ({
   const y = marks?.y ?? "y";
   const series = marks?.series;
   const variant = marks?.variant ?? "area-line";
-  const shouldShowLine = variant === "area-line";
+  const shouldShowLine = variant === "area-line" && !series;
+
+  const sharedMarkOptions = {
+    ...(marks?.interval ? { interval: marks.interval } : {}),
+    ...(marks?.sort ? { sort: marks.sort } : {}),
+    tip: true,
+  };
 
   const areaOptions = {
     x,
     y,
     ...(series ? { z: series, fill: series } : {}),
     fillOpacity: 0.3,
-    ...(marks?.interval ? { interval: marks.interval } : {}),
-    ...(marks?.sort ? { sort: marks.sort } : {}),
-    tip: true,
+    ...sharedMarkOptions,
   };
 
   const lineOptions = {
@@ -41,9 +45,7 @@ const AreaChart = ({
     y,
     ...(series ? { z: series, stroke: series } : {}),
     strokeWidth: 2,
-    ...(marks?.interval ? { interval: marks.interval } : {}),
-    ...(marks?.sort ? { sort: marks.sort } : {}),
-    tip: true,
+    ...sharedMarkOptions,
   };
 
   return (
@@ -59,7 +61,7 @@ const AreaChart = ({
           marks: [
             Plot.ruleY([0]),
             Plot.areaY(data, areaOptions),
-            shouldShowLine ? Plot.lineY(data, lineOptions) : null,
+            shouldShowLine ? Plot.line(data, lineOptions) : null,
           ].filter(Boolean),
         }}
         dependencies={[data, layout, marks]}

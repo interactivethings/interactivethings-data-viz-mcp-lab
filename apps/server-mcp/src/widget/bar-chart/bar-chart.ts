@@ -1,18 +1,18 @@
 import { BarChartWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const BarChartWidgetResourceUri = "ui://bar-chart";
 
-const BarChartWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "bar-chart");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-bar-chart.html")
-    : path.join(import.meta.dir, "widget/bar-chart/widget-bar-chart.html");
-  return yield* fs.readFileString(htmlPath);
+const BarChartWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/bar-chart",
+  sourcePath: "../../../public/widgets/widget-bar-chart.html",
+  distPath: "public/widgets/widget-bar-chart.html",
 });
 
 export const BarChartWidgetResourceLayer = makeUiResource(

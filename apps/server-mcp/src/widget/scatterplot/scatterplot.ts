@@ -1,18 +1,18 @@
 import { ScatterplotWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const ScatterplotWidgetResourceUri = "ui://scatterplot";
 
-const ScatterplotWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "scatterplot");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-scatterplot.html")
-    : path.join(import.meta.dir, "widget/scatterplot/widget-scatterplot.html");
-  return yield* fs.readFileString(htmlPath);
+const ScatterplotWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/scatterplot",
+  sourcePath: "../../../public/widgets/widget-scatterplot.html",
+  distPath: "public/widgets/widget-scatterplot.html",
 });
 
 export const ScatterplotWidgetResourceLayer = makeUiResource(
