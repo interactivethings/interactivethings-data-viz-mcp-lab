@@ -1,3 +1,4 @@
+export { PlotFigure, type PlotFigureProps } from "./PlotFigure";
 export { usePlotRenderer } from "./usePlotRenderer";
 export { useWidgetPayload } from "./useWidgetPayload";
 export { useWidgetResize } from "./useWidgetResize";
