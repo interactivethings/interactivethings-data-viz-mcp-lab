@@ -17,7 +17,7 @@ export const barChartOneShot = McpServer.prompt({
         |  - Vertical: x=category, y=value.
         |  - Horizontal: x=value, y=category.
         |- Use layout for sizing, margins, title/subtitle/caption, and grid.  
-        |- If you need groups/series, use marks.fill (or marks.z) with a series field.
+        |- If you need stacked bars, use marks.series with a categorical series field.
         |
         |Return only the JSON payload that matches BarChartWidgetPayload.
         |## Best practices (short)
@@ -25,7 +25,7 @@ export const barChartOneShot = McpServer.prompt({
         |- Include a clear title and a brief caption for context/source.
         |- Use direction: "horizontal" for long category labels.
         |- Keep margins generous when labels are rotated or long.
-        |- Use marks.fill only when multiple series are truly needed.
+        |- Use marks.series only when multiple series are truly needed.
         |
         |Example payload
         |{
@@ -46,8 +46,7 @@ export const barChartOneShot = McpServer.prompt({
         |  },
         |  "marks": {
         |    "x": "month",
-        |    "y": "sales",
-        |    "tip": true
+        |    "y": "sales"
         |  }
         |}
         |

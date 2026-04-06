@@ -1,5 +1,5 @@
 import { Schema, Struct } from "effect";
-import { Channel, LineCurve, LineMarker, PlotLayoutProps } from "./shared";
+import { Channel, PlotLayoutProps } from "./shared";
 
 export const LineDatumValue = Schema.Union([
   Schema.String,
@@ -26,38 +26,14 @@ export const LineDatumDefaults = Schema.Struct({
 
 export const LineMarkProps = Schema.Struct({
   x: Channel.annotate({
-    description:
-      "Horizontal position channel. For line charts, typically temporal or quantitative.",
+    description: "Horizontal position field. Defaults to 'x' when omitted.",
   }),
   y: Channel.annotate({
-    description:
-      "Vertical position channel. For line charts, typically quantitative.",
+    description: "Vertical value field. Defaults to 'y' when omitted.",
   }),
-  z: Channel.annotate({
+  series: Channel.annotate({
     description:
-      "Series/channel for grouping multiple lines. Typically a categorical value such as a series name.",
-  }),
-
-  stroke: Channel.annotate({
-    description:
-      "Stroke color channel. If specified, consider also setting z to avoid segmenting on color changes.",
-  }),
-  strokeWidth: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description:
-      "Stroke width in pixels, or a channel name for per-point width.",
-  }),
-  strokeOpacity: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description:
-      "Stroke opacity (0-1), or a channel name for per-point opacity.",
-  }),
-
-  curve: LineCurve.annotate({
-    description:
-      "Curve interpolation name (e.g. linear, step, basis, catmull-rom).",
-  }),
-  marker: Schema.Union([Schema.Boolean, LineMarker]).annotate({
-    description:
-      "Marker to draw at each point (true for default, or marker name).",
+      "Optional categorical field for multiple series. The renderer uses this for grouping and color.",
   }),
   sort: Schema.Union([
     Schema.String,
@@ -68,10 +44,6 @@ export const LineMarkProps = Schema.Struct({
   ]).annotate({
     description:
       "Sort option to order points or series. Use a channel name or { channel, order }.",
-  }),
-
-  tip: Schema.Boolean.annotate({
-    description: "If true, show a tooltip with all data fields on hover.",
   }),
 }).mapFields(Struct.map(Schema.optionalKey));
 
@@ -86,9 +58,27 @@ export const LineChartWidgetPayload = Schema.Struct({
   }).pipe(Schema.optionalKey),
   marks: LineMarkProps.annotate({
     description:
-      "Line mark channel mapping. Use marks.x and marks.y to select data keys. Defaults are x='x' and y='y' if omitted.",
+      "Line mark mapping. Use marks.x and marks.y to select data keys. Use marks.series for multiple lines. Defaults are x='x' and y='y' if omitted.",
   }).pipe(Schema.optionalKey),
 }).annotate({
   description:
-    "Payload for render_line_chart_widget. LLM guidance: choose marks.x and marks.y to match keys in data objects.",
+    "Payload for render_line_chart_widget. Use for trends and continuous comparisons across time or another ordered dimension.",
+  examples: [
+    {
+      data: [
+        { date: "2024-01-01", value: 120 },
+        { date: "2024-02-01", value: 98 },
+      ],
+      marks: { x: "date", y: "value" },
+    },
+    {
+      data: [
+        { date: "2024-01-01", value: 120, series: "Alpha" },
+        { date: "2024-02-01", value: 98, series: "Alpha" },
+        { date: "2024-01-01", value: 80, series: "Beta" },
+        { date: "2024-02-01", value: 110, series: "Beta" },
+      ],
+      marks: { x: "date", y: "value", series: "series" },
+    },
+  ],
 });

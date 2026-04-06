@@ -20,6 +20,17 @@ const LineChart = ({
   const width = layout?.width ?? measuredWidth ?? undefined;
   const layoutOptions = layout ?? {};
   const { width: _layoutWidth, ...restLayoutOptions } = layoutOptions;
+  const x = marks?.x ?? "x";
+  const y = marks?.y ?? "y";
+  const series = marks?.series;
+  const lineOptions = {
+    x,
+    y,
+    ...(series ? { z: series, stroke: series } : {}),
+    ...(marks?.sort ? { sort: marks.sort } : {}),
+    strokeWidth: 2,
+    tip: true,
+  };
 
   return (
     <WidgetFrame frameRef={frameRef}>
@@ -31,14 +42,7 @@ const LineChart = ({
             ...(layoutOptions.color ? layoutOptions.color : {}),
             scheme: "Category10",
           },
-          marks: [
-            Plot.ruleY([0]),
-            Plot.line(data, {
-              ...marks,
-              x: marks?.x ?? "x",
-              y: marks?.y ?? "y",
-            }),
-          ],
+          marks: [Plot.ruleY([0]), Plot.line(data, lineOptions)],
         }}
         dependencies={[data, layout, marks]}
       />
