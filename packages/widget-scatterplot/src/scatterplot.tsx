@@ -22,6 +22,19 @@ const Scatterplot = ({
   const width = layout?.width ?? measuredWidth ?? undefined;
   const layoutOptions = layout ?? {};
   const { width: _layoutWidth, ...restLayoutOptions } = layoutOptions;
+  const x = marks?.x ?? "x";
+  const y = marks?.y ?? "y";
+  const series = marks?.series;
+  const dotOptions = {
+    x,
+    y,
+    ...(series ? { fill: series, stroke: series } : {}),
+    ...(marks?.size ? { r: marks.size } : {}),
+    ...(marks?.sort !== undefined ? { sort: marks.sort } : {}),
+    strokeWidth: 1.5,
+    fillOpacity: 0.8,
+    tip: true,
+  };
 
   return (
     <WidgetFrame frameRef={frameRef}>
@@ -33,15 +46,7 @@ const Scatterplot = ({
             ...(layoutOptions.color ? layoutOptions.color : {}),
             scheme: "Category10",
           },
-          marks: [
-            Plot.ruleX([0]),
-            Plot.ruleY([0]),
-            Plot.dot(data, {
-              ...marks,
-              x: marks?.x ?? "x",
-              y: marks?.y ?? "y",
-            }),
-          ],
+          marks: [Plot.ruleX([0]), Plot.ruleY([0]), Plot.dot(data, dotOptions)],
         }}
         dependencies={[data, layout, marks]}
       />

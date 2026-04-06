@@ -1,10 +1,5 @@
 import { Schema, Struct } from "effect";
-import {
-  Channel,
-  IntervalValue,
-  NumberGreaterThanZero,
-  PlotLayoutProps,
-} from "./shared";
+import { Channel, IntervalValue, PlotLayoutProps } from "./shared";
 
 export const BarDatumValue = Schema.Union([
   Schema.String,
@@ -32,27 +27,26 @@ export const BarDatumDefaults = Schema.Struct({
 export const BarMarkProps = Schema.Struct({
   x: Channel.annotate({
     description:
-      "Primary position channel. For vertical bars, maps to the category/ordinal axis; for horizontal bars, maps to the value axis.",
+      "Field for the category or value axis. Defaults to 'category' for vertical bars and 'value' for horizontal bars.",
   }),
   y: Channel.annotate({
     description:
-      "Primary value channel. For vertical bars, maps to the value axis; for horizontal bars, maps to the category/ordinal axis.",
+      "Field for the value or category axis. Defaults to 'value' for vertical bars and 'category' for horizontal bars.",
   }),
-  z: Channel.annotate({
+  series: Channel.annotate({
     description:
-      "Series/channel for grouping within each stack. Use with fill for stacked bars when multiple series share the same x/y.",
+      "Optional categorical field for stacked bars or grouped color encoding.",
   }),
   interval: IntervalValue,
-  inset: NumberGreaterThanZero,
-  fill: Channel.annotate({
+  sort: Schema.Union([
+    Schema.String,
+    Schema.Struct({
+      channel: Schema.String,
+      order: Schema.Literals(["ascending", "descending"]),
+    }),
+  ]).annotate({
     description:
-      "Series/color channel. With only x and y available, setting fill (or z) makes Plot apply the stack transform, producing stacked bars. Vertical bars stack by x; horizontal bars stack by y.",
-  }),
-  stroke: Channel.annotate({
-    description: "Stroke color channel. Maps to the outline color of the bars.",
-  }),
-  tip: Schema.Boolean.annotate({
-    description: "If true, show a tooltip with all data fields on hover.",
+      "Optional sort for category ordering. Use a channel name or { channel, order }.",
   }),
 }).mapFields(Struct.map(Schema.optionalKey));
 
@@ -73,11 +67,11 @@ export const BarChartWidgetPayload = Schema.Struct({
   }).pipe(Schema.optionalKey),
   marks: BarMarkProps.annotate({
     description:
-      "Mark channel mapping. Use marks.x and marks.y to select data keys that match your data objects. For vertical bars, set x=category and y=value. For horizontal bars, set x=value and y=category.",
-  }),
+      "Bar mark mapping. Use marks.x and marks.y to select data keys. Use marks.series for stacked bars. Defaults are based on direction if omitted.",
+  }).pipe(Schema.optionalKey),
 }).annotate({
   description:
-    "Payload for render_bar_chart_widget. Align marks.x/marks.y with the data keys for the chosen orientation.",
+    "Payload for render_bar_chart_widget. Use for category comparison, ranking, and simple part-to-whole bars.",
   examples: [
     {
       data: [
@@ -89,11 +83,13 @@ export const BarChartWidgetPayload = Schema.Struct({
     },
     {
       data: [
-        { breed: "Golden Retriever", popularity: 9 },
-        { breed: "Labrador Retriever", popularity: 8.5 },
+        { quarter: "Q1", region: "EU", value: 40 },
+        { quarter: "Q1", region: "NA", value: 80 },
+        { quarter: "Q2", region: "EU", value: 30 },
+        { quarter: "Q2", region: "NA", value: 68 },
       ],
-      direction: "horizontal",
-      marks: { x: "popularity", y: "breed" },
+      direction: "vertical",
+      marks: { x: "quarter", y: "value", series: "region" },
     },
   ],
 });

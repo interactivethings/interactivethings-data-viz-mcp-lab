@@ -1,5 +1,5 @@
 import { Schema, Struct } from "effect";
-import { Channel, DotSymbol, PlotLayoutProps } from "./shared";
+import { Channel, PlotLayoutProps } from "./shared";
 
 export const DotDatumValue = Schema.Union([
   Schema.String,
@@ -26,44 +26,18 @@ export const DotDatumDefaults = Schema.Struct({
 
 export const DotMarkProps = Schema.Struct({
   x: Channel.annotate({
-    description:
-      "Horizontal position channel. For scatterplots, typically quantitative or temporal.",
+    description: "Horizontal position field. Defaults to 'x' when omitted.",
   }),
   y: Channel.annotate({
+    description: "Vertical position field. Defaults to 'y' when omitted.",
+  }),
+  series: Channel.annotate({
+    description: "Optional categorical field for grouped color encoding.",
+  }),
+  size: Schema.Union([Channel, Schema.NumberFromString]).annotate({
     description:
-      "Vertical position channel. For scatterplots, typically quantitative.",
+      "Optional quantitative field for dot size, or a constant radius in pixels.",
   }),
-
-  r: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description: "Dot radius in pixels, or a channel name for per-point size.",
-  }),
-  symbol: Schema.Union([Channel, DotSymbol]).annotate({
-    description:
-      "Symbol name or channel. Use a categorical field to map different symbols.",
-  }),
-  rotate: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description: "Rotation angle in degrees clockwise, or a channel name.",
-  }),
-
-  fill: Channel.annotate({
-    description: "Fill color channel. Maps to dot fill color.",
-  }),
-  fillOpacity: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description: "Fill opacity (0-1), or a channel name.",
-  }),
-  stroke: Channel.annotate({
-    description: "Stroke color channel. Maps to dot outline color.",
-  }),
-  strokeWidth: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description: "Stroke width in pixels, or a channel name.",
-  }),
-  strokeOpacity: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description: "Stroke opacity (0-1), or a channel name.",
-  }),
-  opacity: Schema.Union([Channel, Schema.NumberFromString]).annotate({
-    description: "Overall opacity (0-1), or a channel name.",
-  }),
-
   sort: Schema.Union([
     Schema.String,
     Schema.Null,
@@ -74,10 +48,6 @@ export const DotMarkProps = Schema.Struct({
   ]).annotate({
     description:
       "Sort option to order dots. Use a channel name, { channel, order }, or null for input order.",
-  }),
-
-  tip: Schema.Boolean.annotate({
-    description: "If true, show a tooltip with all data fields on hover.",
   }),
 }).mapFields(Struct.map(Schema.optionalKey));
 
@@ -92,9 +62,25 @@ export const ScatterplotWidgetPayload = Schema.Struct({
   }).pipe(Schema.optionalKey),
   marks: DotMarkProps.annotate({
     description:
-      "Dot mark channel mapping. Use marks.x and marks.y to select data keys. Defaults are x='x' and y='y' if omitted.",
-  }),
+      "Scatterplot mapping. Use marks.x and marks.y to select data keys. Use marks.series for grouped color and marks.size for bubble charts. Defaults are x='x' and y='y' if omitted.",
+  }).pipe(Schema.optionalKey),
 }).annotate({
   description:
-    "Payload for render_scatterplot_widget. LLM guidance: choose marks.x and marks.y to match keys in data objects.",
+    "Payload for render_scatterplot_widget. Use for correlation, clustering, and bubble-chart style comparisons.",
+  examples: [
+    {
+      data: [
+        { horsepower: 130, mpg: 24 },
+        { horsepower: 165, mpg: 18 },
+      ],
+      marks: { x: "mpg", y: "horsepower" },
+    },
+    {
+      data: [
+        { x: 10, y: 22, category: "A", volume: 100 },
+        { x: 15, y: 18, category: "B", volume: 160 },
+      ],
+      marks: { x: "x", y: "y", series: "category", size: "volume" },
+    },
+  ],
 });

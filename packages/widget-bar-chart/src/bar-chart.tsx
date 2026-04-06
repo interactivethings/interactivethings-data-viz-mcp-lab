@@ -23,10 +23,15 @@ const BarChart = ({
   const layoutOptions = layout ?? {};
   const { width: _layoutWidth, ...restLayoutOptions } = layoutOptions;
   const isHorizontal = direction === "horizontal";
+  const series = marks?.series;
   const barOptions = {
-    ...marks,
     x: marks?.x ?? (isHorizontal ? "value" : "category"),
     y: marks?.y ?? (isHorizontal ? "category" : "value"),
+    ...(series ? { z: series, fill: series } : {}),
+    ...(marks?.interval ? { interval: marks.interval } : {}),
+    ...(marks?.sort ? { sort: marks.sort } : {}),
+    inset: 0.5,
+    tip: true,
   };
 
   return (
