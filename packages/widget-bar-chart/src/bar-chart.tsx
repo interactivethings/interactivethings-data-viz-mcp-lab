@@ -2,13 +2,12 @@ import * as Plot from "@observablehq/plot";
 import { BarChartWidgetPayload } from "@repo/domain/Chart";
 import {
   type HostApp,
-  usePlotRenderer,
+  PlotFigure,
   useWidgetPayload,
   useWidgetResize,
   WidgetFrame,
   WidgetStatus,
 } from "@repo/ui";
-import { useRef } from "react";
 
 const BarChart = ({
   data,
@@ -17,46 +16,38 @@ const BarChart = ({
   marks,
   app,
 }: typeof BarChartWidgetPayload.Type & { app?: HostApp | null }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const { frameRef, measuredWidth } = useWidgetResize(app);
 
   const width = layout?.width ?? measuredWidth ?? undefined;
 
-  usePlotRenderer({
-    containerRef,
-    ...(width ? { width } : {}),
-    dependencies: [data, direction, layout, marks],
-    renderPlot: ({ width }: { width?: number }) => {
-      const layoutOptions = layout ?? {};
-      const { width: _layoutWidth, ...restLayoutOptions } = layoutOptions;
-      const isHorizontal = direction === "horizontal";
-      const barOptions = {
-        ...marks,
-        x: marks?.x ?? (isHorizontal ? "value" : "category"),
-        y: marks?.y ?? (isHorizontal ? "category" : "value"),
-      };
-
-      return Plot.plot({
-        style: "--plot-background: var(--color-background-primary);",
-        ...restLayoutOptions,
-        ...(width ? { width } : {}),
-        color: {
-          ...(layoutOptions.color ? layoutOptions.color : {}),
-          scheme: "Category10",
-        },
-        marks: [
-          isHorizontal ? Plot.ruleX([0]) : Plot.ruleY([0]),
-          isHorizontal
-            ? Plot.barX(data, barOptions)
-            : Plot.barY(data, barOptions),
-        ].filter(Boolean),
-      });
-    },
-  });
+  const layoutOptions = layout ?? {};
+  const { width: _layoutWidth, ...restLayoutOptions } = layoutOptions;
+  const isHorizontal = direction === "horizontal";
+  const barOptions = {
+    ...marks,
+    x: marks?.x ?? (isHorizontal ? "value" : "category"),
+    y: marks?.y ?? (isHorizontal ? "category" : "value"),
+  };
 
   return (
     <WidgetFrame frameRef={frameRef}>
-      <div ref={containerRef} />
+      <PlotFigure
+        options={{
+          ...restLayoutOptions,
+          ...(width ? { width } : {}),
+          color: {
+            ...(layoutOptions.color ? layoutOptions.color : {}),
+            scheme: "Category10",
+          },
+          marks: [
+            isHorizontal ? Plot.ruleX([0]) : Plot.ruleY([0]),
+            isHorizontal
+              ? Plot.barX(data, barOptions)
+              : Plot.barY(data, barOptions),
+          ],
+        }}
+        dependencies={[data, direction, layout, marks]}
+      />
     </WidgetFrame>
   );
 };
