@@ -1,18 +1,18 @@
 import { LineChartWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const LineChartWidgetResourceUri = "ui://line-chart";
 
-const LineChartWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "line-chart");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-line-chart.html")
-    : path.join(import.meta.dir, "widget/line-chart/widget-line-chart.html");
-  return yield* fs.readFileString(htmlPath);
+const LineChartWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/line-chart",
+  sourcePath: "../../../public/widgets/widget-line-chart.html",
+  distPath: "public/widgets/widget-line-chart.html",
 });
 
 export const LineChartWidgetResourceLayer = makeUiResource(

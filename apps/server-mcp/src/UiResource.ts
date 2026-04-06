@@ -1,4 +1,4 @@
-import { Effect, Layer, Schema } from "effect";
+import { Effect, FileSystem, Layer, Schema } from "effect";
 import { McpServer, Tool } from "effect/unstable/ai";
 
 const UiResourceMimeType = "text/html;profile=mcp-app";
@@ -20,6 +20,20 @@ type UiResourceSpec<E, R> = {
   html: Effect.Effect<string, E, R>;
   meta?: UiMeta;
 };
+
+export const readPublicAsset = (options: {
+  importMetaDir: string;
+  sourceSuffix: string;
+  sourcePath: string;
+  distPath: string;
+}) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const assetPath = options.importMetaDir.endsWith(options.sourceSuffix)
+      ? `${options.importMetaDir}/${options.sourcePath}`
+      : `${options.importMetaDir}/${options.distPath}`;
+    return yield* fs.readFileString(assetPath);
+  });
 
 export const makeUiResource = <E, R>(uri: string, spec: UiResourceSpec<E, R>) =>
   Layer.unwrap(

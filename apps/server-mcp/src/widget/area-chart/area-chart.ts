@@ -1,18 +1,18 @@
 import { AreaChartWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const AreaChartWidgetResourceUri = "ui://area-chart";
 
-const AreaChartWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "area-chart");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-area-chart.html")
-    : path.join(import.meta.dir, "widget/area-chart/widget-area-chart.html");
-  return yield* fs.readFileString(htmlPath);
+const AreaChartWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/area-chart",
+  sourcePath: "../../../public/widgets/widget-area-chart.html",
+  distPath: "public/widgets/widget-area-chart.html",
 });
 
 export const AreaChartWidgetResourceLayer = makeUiResource(

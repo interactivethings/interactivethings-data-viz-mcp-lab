@@ -1,21 +1,18 @@
 import { BulletChartWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const BulletChartWidgetResourceUri = "ui://bullet-chart";
 
-const BulletChartWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "bullet-chart");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-bullet-chart.html")
-    : path.join(
-        import.meta.dir,
-        "widget/bullet-chart/widget-bullet-chart.html",
-      );
-  return yield* fs.readFileString(htmlPath);
+const BulletChartWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/bullet-chart",
+  sourcePath: "../../../public/widgets/widget-bullet-chart.html",
+  distPath: "public/widgets/widget-bullet-chart.html",
 });
 
 export const BulletChartWidgetResourceLayer = makeUiResource(

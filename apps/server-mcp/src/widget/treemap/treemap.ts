@@ -1,18 +1,18 @@
 import { TreemapWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const TreemapWidgetResourceUri = "ui://treemap";
 
-const TreemapWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "treemap");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-treemap.html")
-    : path.join(import.meta.dir, "widget/treemap/widget-treemap.html");
-  return yield* fs.readFileString(htmlPath);
+const TreemapWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/treemap",
+  sourcePath: "../../../public/widgets/widget-treemap.html",
+  distPath: "public/widgets/widget-treemap.html",
 });
 
 export const TreemapWidgetResourceLayer = makeUiResource(

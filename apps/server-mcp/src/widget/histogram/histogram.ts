@@ -1,18 +1,18 @@
 import { HistogramWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const HistogramWidgetResourceUri = "ui://histogram";
 
-const HistogramWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "histogram");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-histogram.html")
-    : path.join(import.meta.dir, "widget/histogram/widget-histogram.html");
-  return yield* fs.readFileString(htmlPath);
+const HistogramWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/histogram",
+  sourcePath: "../../../public/widgets/widget-histogram.html",
+  distPath: "public/widgets/widget-histogram.html",
 });
 
 export const HistogramWidgetResourceLayer = makeUiResource(

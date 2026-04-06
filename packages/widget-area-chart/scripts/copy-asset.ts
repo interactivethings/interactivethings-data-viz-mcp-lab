@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { existsSync, watch } from "node:fs";
 import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -13,8 +14,8 @@ if (mode !== "build" && mode !== "dev") {
 const sourcePath = path.resolve("dist/index.html");
 const destinationDir = path.resolve(
   mode === "dev"
-    ? "../../apps/server-mcp/src/widget/area-chart"
-    : "../../apps/server-mcp/dist/widget/area-chart",
+    ? "../../apps/server-mcp/public/widgets"
+    : "../../apps/server-mcp/dist/public/widgets",
 );
 const destinationPath = path.join(destinationDir, "widget-area-chart.html");
 

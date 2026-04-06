@@ -1,18 +1,18 @@
 import { GeoChartWidgetPayload } from "@repo/domain/Chart";
-import { Effect, FileSystem, Path } from "effect";
-import { makeUiRenderTool, makeUiResource } from "../../UiResource";
+import { Effect } from "effect";
+import {
+  makeUiRenderTool,
+  makeUiResource,
+  readPublicAsset,
+} from "../../UiResource";
 
 const GeoChartWidgetResourceUri = "ui://geo-chart";
 
-const GeoChartWidgetHtml = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const sourceSuffix = path.join("widget", "geo-chart");
-  const isSourcePath = import.meta.dir.endsWith(sourceSuffix);
-  const htmlPath = isSourcePath
-    ? path.join(import.meta.dir, "widget-geo-chart.html")
-    : path.join(import.meta.dir, "widget/geo-chart/widget-geo-chart.html");
-  return yield* fs.readFileString(htmlPath);
+const GeoChartWidgetHtml = readPublicAsset({
+  importMetaDir: import.meta.dir,
+  sourceSuffix: "src/widget/geo-chart",
+  sourcePath: "../../../public/widgets/widget-geo-chart.html",
+  distPath: "public/widgets/widget-geo-chart.html",
 });
 
 export const GeoChartWidgetResourceLayer = makeUiResource(

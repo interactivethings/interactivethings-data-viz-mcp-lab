@@ -51,4 +51,4 @@ tsconfig.tsbuildinfo
 .reference
 
 # Server MCP widget
-apps/server-mcp/src/widget/**/*.html
+apps/server-mcp/public/**/*.html
